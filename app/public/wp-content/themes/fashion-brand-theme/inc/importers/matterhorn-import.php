@@ -89,13 +89,13 @@ class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
 
 		fashion_brand_theme_matterhorn_ensure_brand_attribute();
 
-		$total   = fashion_brand_theme_matterhorn_count_products( $feed );
-		$imported = 0;
-		$updated  = 0;
-		$created  = 0;
-		$skipped  = 0;
-		$errors   = 0;
-		$seen     = 0;
+		$total             = fashion_brand_theme_matterhorn_count_products( $feed );
+		$imported          = 0; // Newly created products.
+		$updated           = 0;
+		$skipped_unmapped  = 0;
+		$skipped_other     = 0;
+		$errors            = 0;
+		$seen              = 0;
 
 		WP_CLI::log(
 			sprintf(
@@ -130,37 +130,67 @@ class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
 				continue;
 			}
 
-			if ( $limit > 0 && ( $imported + $skipped + $errors ) >= $limit ) {
+			$processed = $imported + $updated + $skipped_unmapped + $skipped_other + $errors;
+
+			if ( $limit > 0 && $processed >= $limit ) {
 				break;
 			}
 
 			$product_data = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
 
 			if ( empty( $product_data['product_id'] ) ) {
-				++$skipped;
+				++$skipped_other;
 				WP_CLI::warning( sprintf( 'Skipped product at position %d — missing product_id.', $seen ) );
 				continue;
 			}
 
+			$category_slug = fashion_brand_theme_matterhorn_map_category_slug( $product_data['category'] );
+
+			if ( null === $category_slug ) {
+				++$skipped_unmapped;
+				WP_CLI::log(
+					sprintf(
+						'Skipped #%s — category not mapped (%s).',
+						$product_data['product_id'],
+						fashion_brand_theme_matterhorn_strip_category_prefix( $product_data['category'] )
+					)
+				);
+				continue;
+			}
+
+			$cat_term = get_term_by( 'slug', $category_slug, 'product_cat' );
+
+			if ( ! $cat_term || is_wp_error( $cat_term ) ) {
+				++$skipped_other;
+				WP_CLI::warning(
+					sprintf(
+						'Skipped #%s — product_cat slug "%s" does not exist. Create the canonical category first.',
+						$product_data['product_id'],
+						$category_slug
+					)
+				);
+				continue;
+			}
+
 			try {
-				$result = fashion_brand_theme_matterhorn_upsert_product( $product_data );
-				++$imported;
+				$result = fashion_brand_theme_matterhorn_upsert_product( $product_data, (int) $cat_term->term_id );
 
 				if ( 'created' === $result['action'] ) {
-					++$created;
+					++$imported;
 				} else {
 					++$updated;
 				}
 
 				WP_CLI::log(
 					sprintf(
-						'Imported %d / %d — %s #%s (%s) [%s]',
-						$imported + $offset,
+						'Imported %d / %d — %s #%s (%s) [%s → %s]',
+						$imported + $updated + $offset,
 						$total,
 						$result['action'],
 						$product_data['product_id'],
 						$result['sku'],
-						$result['type']
+						$result['type'],
+						$category_slug
 					)
 				);
 			} catch ( Exception $e ) {
@@ -176,7 +206,7 @@ class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
 
 			// Free memory between products.
 			unset( $node_xml, $product_data, $result );
-			if ( 0 === ( $imported % 25 ) ) {
+			if ( 0 === ( ( $imported + $updated ) % 25 ) ) {
 				wp_cache_flush();
 			}
 		}
@@ -185,11 +215,11 @@ class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
 
 		WP_CLI::success(
 			sprintf(
-				'Done. Processed %d (created %d, updated %d, skipped %d, errors %d).',
+				'Done. Imported %d, updated %d, skipped (unmapped category) %d, skipped (other) %d, errors %d.',
 				$imported,
-				$created,
 				$updated,
-				$skipped,
+				$skipped_unmapped,
+				$skipped_other,
 				$errors
 			)
 		);
@@ -369,14 +399,13 @@ function fashion_brand_theme_matterhorn_apply_markup( $netto ) {
 }
 
 /**
- * Build / find nested product_cat hierarchy from a Matterhorn category path.
- * Strips leading "VOOR HAAR" and "Women's fashion" segments.
+ * Strip leading "VOOR HAAR" / "Women's fashion" segments from a feed category path.
  *
- * @param string $path Pipe- or slash-delimited category path.
- * @return int Leaf term ID, or 0.
+ * @param string $path Raw feed category path.
+ * @return string Normalized path with leading slash, e.g. "/jurken/dagelijks jurken".
  */
-function fashion_brand_theme_matterhorn_resolve_category( $path ) {
-	$path = str_replace( '|', '/', (string) $path );
+function fashion_brand_theme_matterhorn_strip_category_prefix( $path ) {
+	$path  = str_replace( '|', '/', (string) $path );
 	$parts = array_values(
 		array_filter(
 			array_map( 'trim', explode( '/', $path ) ),
@@ -386,11 +415,6 @@ function fashion_brand_theme_matterhorn_resolve_category( $path ) {
 		)
 	);
 
-	if ( empty( $parts ) ) {
-		return 0;
-	}
-
-	// Strip the first two known prefix segments when present.
 	$strip = array( 'voor haar', "women's fashion", 'womens fashion' );
 
 	while ( count( $parts ) >= 1 && in_array( strtolower( $parts[0] ), $strip, true ) ) {
@@ -398,64 +422,62 @@ function fashion_brand_theme_matterhorn_resolve_category( $path ) {
 	}
 
 	if ( empty( $parts ) ) {
-		return 0;
+		return '';
 	}
 
-	$parent_id = 0;
-	$leaf_id   = 0;
+	return '/' . implode( '/', $parts );
+}
 
-	foreach ( $parts as $name ) {
-		$existing = get_terms(
-			array(
-				'taxonomy'   => 'product_cat',
-				'name'       => $name,
-				'parent'     => $parent_id,
-				'hide_empty' => false,
-				'number'     => 1,
-			)
-		);
+/**
+ * Map stripped feed category paths to the theme's 6 canonical product_cat slugs.
+ * Keys must match the path after stripping "/VOOR HAAR/Women's fashion".
+ *
+ * @return array<string, string>
+ */
+function fashion_brand_theme_matterhorn_category_map() {
+	return array(
+		'/t-shirts'                                             => 't-shirts',
+		'/Shirts, Blouses/Tops, T-shirts, T-shirts'             => 't-shirts',
+		'/Shirts, Blouses/Tops, T-shirts, T-shirts/T-shirts / Tops' => 't-shirts',
+		'/Grote maten mode/Grote maten t-shirt'                 => 't-shirts',
+		'/Shirts, Blouses/Blouses, tunieken'                    => 'shirts',
+		'/Shirts, Blouses/shirts Vrouwen'                       => 'shirts',
+		'/Shirts, Blouses/lichaam'                              => 'shirts',
+		'/Grote maten mode/Blouses in grote maten'              => 'shirts',
+		'/Broeken, shorts'                                      => 'pants',
+		'/Broeken, shorts/Broeken elegante'                     => 'pants',
+		'/Broeken, shorts/Shorts, bijgesneden'                  => 'pants',
+		'/Broeken, shorts/lange broek'                          => 'pants',
+		'/Broeken, shorts/leggings'                             => 'pants',
+		'/Broeken, shorts/overalls'                             => 'pants',
+		'/Broeken, shorts/trainingsbroek'                       => 'pants',
+		'/jurken/Formele jurken, cocktail'                      => 'dresses',
+		'/jurken/avondjurken'                                   => 'dresses',
+		'/jurken/dagelijks jurken'                              => 'dresses',
+		'/Grote maten mode/Grote maten jurken'                  => 'dresses',
+		'/Truien/Truien'                                        => 'knitwear',
+		'/Truien/Truien, Turtle-Necks'                          => 'knitwear',
+		'/Grote maten mode/Dames sweaters groot formaat'        => 'knitwear',
+		'/Grote maten mode/Grote maten damessweater'            => 'knitwear',
+		// No feed category maps to 'hoodies'.
+	);
+}
 
-		if ( ! is_wp_error( $existing ) && ! empty( $existing ) ) {
-			$leaf_id   = (int) $existing[0]->term_id;
-			$parent_id = $leaf_id;
-			continue;
-		}
+/**
+ * Resolve a feed category path to a canonical product_cat slug, or null if unmapped.
+ *
+ * @param string $path Raw feed category path.
+ * @return string|null Canonical slug, or null when the product must be skipped.
+ */
+function fashion_brand_theme_matterhorn_map_category_slug( $path ) {
+	$stripped = fashion_brand_theme_matterhorn_strip_category_prefix( $path );
+	$map      = fashion_brand_theme_matterhorn_category_map();
 
-		$inserted = wp_insert_term(
-			$name,
-			'product_cat',
-			array(
-				'parent' => $parent_id,
-				'slug'   => sanitize_title( $name ),
-			)
-		);
-
-		if ( is_wp_error( $inserted ) ) {
-			// Slug collision under a different parent — try by slug under this parent.
-			$by_slug = get_terms(
-				array(
-					'taxonomy'   => 'product_cat',
-					'slug'       => sanitize_title( $name ),
-					'parent'     => $parent_id,
-					'hide_empty' => false,
-					'number'     => 1,
-				)
-			);
-
-			if ( ! is_wp_error( $by_slug ) && ! empty( $by_slug ) ) {
-				$leaf_id   = (int) $by_slug[0]->term_id;
-				$parent_id = $leaf_id;
-				continue;
-			}
-
-			return $leaf_id;
-		}
-
-		$leaf_id   = (int) $inserted['term_id'];
-		$parent_id = $leaf_id;
+	if ( '' === $stripped || ! isset( $map[ $stripped ] ) ) {
+		return null;
 	}
 
-	return $leaf_id;
+	return $map[ $stripped ];
 }
 
 /**
@@ -559,11 +581,12 @@ function fashion_brand_theme_matterhorn_sideload_image( $url, $product_id ) {
 /**
  * Create or update a WooCommerce product from parsed feed data.
  *
- * @param array<string, mixed> $data Parsed product.
+ * @param array<string, mixed> $data             Parsed product.
+ * @param int                  $category_term_id Existing product_cat term ID to assign.
  * @return array{action:string,sku:string,type:string,id:int}
  * @throws Exception On fatal product save failure.
  */
-function fashion_brand_theme_matterhorn_upsert_product( array $data ) {
+function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_term_id ) {
 	$matterhorn_id = (string) $data['product_id'];
 	$sku           = (string) $data['code'];
 	$existing_id   = fashion_brand_theme_matterhorn_find_product_id( $matterhorn_id );
@@ -704,7 +727,7 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data ) {
 		wp_set_object_terms( $product_id, array( $brand_slug ), 'pa_brand' );
 	}
 
-	$cat_id = fashion_brand_theme_matterhorn_resolve_category( $data['category'] );
+	$cat_id = (int) $category_term_id;
 	if ( $cat_id > 0 ) {
 		wp_set_object_terms( $product_id, array( $cat_id ), 'product_cat' );
 	}
