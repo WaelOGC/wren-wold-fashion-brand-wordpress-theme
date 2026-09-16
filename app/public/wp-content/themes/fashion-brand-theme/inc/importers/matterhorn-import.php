@@ -405,7 +405,8 @@ function fashion_brand_theme_matterhorn_apply_markup( $netto ) {
  * @return string Normalized path with leading slash, e.g. "/jurken/dagelijks jurken".
  */
 function fashion_brand_theme_matterhorn_strip_category_prefix( $path ) {
-	$path  = str_replace( '|', '/', (string) $path );
+	$path = html_entity_decode( (string) $path, ENT_QUOTES, 'UTF-8' );
+	$path = str_replace( '|', '/', $path );
 	$parts = array_values(
 		array_filter(
 			array_map( 'trim', explode( '/', $path ) ),
