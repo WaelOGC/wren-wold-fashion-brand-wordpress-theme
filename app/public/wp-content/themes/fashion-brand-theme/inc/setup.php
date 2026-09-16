@@ -101,3 +101,39 @@ function fashion_brand_theme_ensure_contact_page() {
 	);
 }
 add_action( 'init', 'fashion_brand_theme_ensure_contact_page' );
+
+/**
+ * Ensure the Home page exists and is set as the static front page.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_home_page() {
+	$home_page = get_page_by_path( 'home' );
+
+	if ( ! $home_page ) {
+		$page_id = wp_insert_post(
+			array(
+				'post_title'   => __( 'Home', 'fashion-brand-theme' ),
+				'post_name'    => 'home',
+				'post_status'  => 'publish',
+				'post_type'    => 'page',
+				'post_content' => '',
+			)
+		);
+	} else {
+		$page_id = $home_page->ID;
+	}
+
+	if ( ! $page_id ) {
+		return;
+	}
+
+	if ( 'page' !== get_option( 'show_on_front' ) ) {
+		update_option( 'show_on_front', 'page' );
+	}
+
+	if ( (int) get_option( 'page_on_front' ) !== (int) $page_id ) {
+		update_option( 'page_on_front', $page_id );
+	}
+}
+add_action( 'init', 'fashion_brand_theme_ensure_home_page' );
