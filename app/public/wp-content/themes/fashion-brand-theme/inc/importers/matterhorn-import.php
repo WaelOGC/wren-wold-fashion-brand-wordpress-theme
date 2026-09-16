@@ -33,7 +33,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
  * Wholesale (price_netto / sale_price_netto) is multiplied by this constant
  * to produce storefront regular_price / sale_price. Default 1 = no markup.
  */
-define( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER', 1 );
+define( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER', 2 );
 
 /**
  * WP-CLI command group: wp matterhorn …
