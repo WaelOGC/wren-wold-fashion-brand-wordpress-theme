@@ -173,6 +173,16 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 							)
 						);
 						break;
+					case 'skipped_unrecognized_color':
+						++$skipped_other;
+						WP_CLI::log(
+							sprintf(
+								'Skipped #%s — unrecognized color (%s).',
+								$result['product_id'],
+								$result['message']
+							)
+						);
+						break;
 					case 'skipped_other':
 						++$skipped_other;
 						WP_CLI::warning( $result['message'] );
@@ -494,6 +504,180 @@ function fashion_brand_theme_matterhorn_map_category_slug( $path ) {
 }
 
 /**
+ * Known single-token color words (lowercase UTF-8, incl. ASCII aliases).
+ *
+ * @return array<string, bool>
+ */
+function fashion_brand_theme_matterhorn_color_words() {
+	static $set = null;
+
+	if ( null !== $set ) {
+		return $set;
+	}
+
+	$words = array(
+		'black', 'white', 'beige', 'pink', 'blue', 'grey', 'gray', 'brown', 'ecru', 'green', 'navy',
+		'bordo', 'red', 'yellow', 'fuksja', 'camel', 'mint', 'khaki', 'violet', 'orange', 'oliwka',
+		'chaber', 'coral', 'grafit', 'czekolada', 'cappuccino', 'brokat', 'pistacja', 'mocca',
+		'brzoskwinia', 'turkus', 'morski', 'melange', 'szmaragd', 'cobalt', 'limonka', 'malina',
+		'multicolor', 'olive', 'szafir', 'lawenda', 'latte', 'lila', 'musztarda', 'musztard',
+		'kwiaty', 'denim', 'claret', 'taupe', 'silver', 'gold', 'popiel', 'paski', 'lilia', 'carmel',
+		'kaszmir', 'pattern', 'fiolek', 'fiołek', 'moro', 'amarant', 'burgund', 'marsala',
+		'chocolate', 'cream', 'lazur', 'koral', 'rubin', 'rudy', 'wrzos', 'magenta', 'purpura',
+		'houndstooth', 'sand', 'indygo', 'pepitka', 'agawa', 'kratka', 'satyna', 'ecri', 'honey',
+		'zielen', 'zieleń', 'panterka', 'mousse', 'morela', 'graphit', 'zebra', 'rozany', 'różany',
+		'miedziany', 'raspberry', 'waves', 'ochra', 'stripes', 'groszki', 'zolty', 'żółty',
+		'cytryna', 'neon', 'wanilia', 'atrament', 'punti', 'seaside', 'liscie', 'liście', 'jeans',
+		'dots', 'flowers', 'blekit', 'błękit', 'sliwka', 'śliwka', 'smietana', 'śmietana',
+		'smietanka', 'śmietanka', 'golebi', 'gołębi', 'sloniowa', 'słoniowa', 'loso', 'łosoś',
+		'losos',
+	);
+
+	$set = array();
+	foreach ( $words as $word ) {
+		$set[ mb_strtolower( $word, 'UTF-8' ) ] = true;
+	}
+
+	return $set;
+}
+
+/**
+ * Compound color modifiers (must precede a known color word).
+ *
+ * @return array<string, bool>
+ */
+function fashion_brand_theme_matterhorn_color_modifiers() {
+	static $set = null;
+
+	if ( null !== $set ) {
+		return $set;
+	}
+
+	$set = array();
+	foreach ( array( 'light', 'dark', 'pale', 'deep', 'bright', 'jasny', 'ciemny' ) as $word ) {
+		$set[ $word ] = true;
+	}
+
+	return $set;
+}
+
+/**
+ * Normalize a code token for color matching (decode + lowercase).
+ *
+ * @param string $token Raw token.
+ * @return string
+ */
+function fashion_brand_theme_matterhorn_normalize_token( $token ) {
+	return mb_strtolower( rawurldecode( (string) $token ), 'UTF-8' );
+}
+
+/**
+ * Title-case a color label from one or more tokens.
+ *
+ * @param array<int, string> $tokens Decoded tokens (original casing OK).
+ * @return string
+ */
+function fashion_brand_theme_matterhorn_format_color_label( array $tokens ) {
+	$parts = array();
+	foreach ( $tokens as $token ) {
+		$decoded = rawurldecode( (string) $token );
+		$parts[] = mb_convert_case( mb_strtolower( $decoded, 'UTF-8' ), MB_CASE_TITLE, 'UTF-8' );
+	}
+
+	return implode( ' ', $parts );
+}
+
+/**
+ * Extract base style key + color label from a Matterhorn <code> value.
+ *
+ * @param string $code Raw feed code.
+ * @return array{style_key:string,color:string}|null
+ */
+function fashion_brand_theme_matterhorn_extract_style_and_color( $code ) {
+	$decoded = rawurldecode( (string) $code );
+	$tokens  = array_values( array_filter( explode( '_', $decoded ), 'strlen' ) );
+
+	if ( count( $tokens ) < 2 ) {
+		return null;
+	}
+
+	$colors = fashion_brand_theme_matterhorn_color_words();
+	$mods   = fashion_brand_theme_matterhorn_color_modifiers();
+	$count  = count( $tokens );
+
+	// Compound: last two tokens = modifier + color.
+	if ( $count >= 3 ) {
+		$mod_key   = fashion_brand_theme_matterhorn_normalize_token( $tokens[ $count - 2 ] );
+		$color_key = fashion_brand_theme_matterhorn_normalize_token( $tokens[ $count - 1 ] );
+
+		if ( isset( $mods[ $mod_key ] ) && isset( $colors[ $color_key ] ) ) {
+			$color_tokens = array_splice( $tokens, -2 );
+			$style_tokens = $tokens;
+
+			if ( empty( $style_tokens ) ) {
+				return null;
+			}
+
+			return array(
+				'style_key' => implode( '_', $style_tokens ),
+				'color'     => fashion_brand_theme_matterhorn_format_color_label( $color_tokens ),
+			);
+		}
+	}
+
+	// Single last-token color.
+	$last_key = fashion_brand_theme_matterhorn_normalize_token( $tokens[ $count - 1 ] );
+
+	if ( isset( $colors[ $last_key ] ) ) {
+		$color_token  = array_pop( $tokens );
+		$style_tokens = $tokens;
+
+		if ( empty( $style_tokens ) ) {
+			return null;
+		}
+
+		return array(
+			'style_key' => implode( '_', $style_tokens ),
+			'color'     => fashion_brand_theme_matterhorn_format_color_label( array( $color_token ) ),
+		);
+	}
+
+	return null;
+}
+
+/**
+ * Build a stable group key from producer + style key.
+ *
+ * @param string $producer Producer / brand.
+ * @param string $style_key Base style key from the code.
+ * @return string
+ */
+function fashion_brand_theme_matterhorn_group_key( $producer, $style_key ) {
+	return mb_strtolower( trim( (string) $producer ), 'UTF-8' ) . '|' . (string) $style_key;
+}
+
+/**
+ * Find parent product ID by Matterhorn group key.
+ *
+ * @param string $group_key Group key.
+ * @return int
+ */
+function fashion_brand_theme_matterhorn_find_product_by_group_key( $group_key ) {
+	$ids = get_posts(
+		array(
+			'post_type'      => 'product',
+			'post_status'    => array( 'publish', 'draft', 'pending', 'private' ),
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'meta_key'       => '_matterhorn_group_key',
+			'meta_value'     => (string) $group_key,
+		)
+	);
+
+	return ! empty( $ids[0] ) ? (int) $ids[0] : 0;
+}
+
+/**
  * Ensure a taxonomy term exists; return its slug.
  *
  * @param string $taxonomy Taxonomy name.
@@ -604,7 +788,12 @@ function fashion_brand_theme_matterhorn_sideload_image( $url, $product_id ) {
 function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_term_id ) {
 	$matterhorn_id = (string) $data['product_id'];
 	$sku           = (string) $data['code'];
-	$existing_id   = fashion_brand_theme_matterhorn_find_product_id( $matterhorn_id );
+	$group_key     = isset( $data['_group_key'] ) ? (string) $data['_group_key'] : '';
+	$color_label   = isset( $data['_extracted_color'] ) ? (string) $data['_extracted_color'] : (string) ( $data['color'] ?? '' );
+
+	// Single-color path: match only this Matterhorn product_id (not group_key),
+	// so sequential imports of sibling colors never overwrite each other.
+	$existing_id = fashion_brand_theme_matterhorn_find_product_id( $matterhorn_id );
 
 	$enabled_sizes = array_values(
 		array_filter(
@@ -629,6 +818,7 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 	$sale_price    = $on_sale ? fashion_brand_theme_matterhorn_apply_markup( $data['sale_price_netto'] ) : '';
 
 	$description = fashion_brand_theme_matterhorn_clean_description( $data['description'] );
+	$display_name = fashion_brand_theme_matterhorn_style_display_name( $data['name'], $color_label );
 
 	if ( $existing_id ) {
 		$product = wc_get_product( $existing_id );
@@ -637,7 +827,6 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 		if ( ! $product ) {
 			$existing_id = 0;
 		} elseif ( $product->get_type() !== $type ) {
-			// Type mismatch: remove old product and recreate under same Matterhorn ID.
 			wp_delete_post( $existing_id, true );
 			$existing_id = 0;
 			$product     = null;
@@ -649,7 +838,7 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 		$action  = 'created';
 	}
 
-	$product->set_name( $data['name'] );
+	$product->set_name( $display_name );
 	$product->set_status( $status );
 	$product->set_catalog_visibility( $catalog );
 	$product->set_description( $description );
@@ -661,12 +850,14 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 
 	$product->update_meta_data( '_matterhorn_product_id', $matterhorn_id );
 	$product->update_meta_data( '_matterhorn_brand', $data['producer'] );
+	if ( '' !== $group_key ) {
+		$product->update_meta_data( '_matterhorn_group_key', $group_key );
+	}
 
-	// Attributes: size (variation when variable), color (filter), brand (filter).
-	$attributes   = array();
-	$size_slugs   = array();
-	$color_slug   = fashion_brand_theme_matterhorn_ensure_term( 'pa_color', $data['color'] );
-	$brand_slug   = fashion_brand_theme_matterhorn_ensure_term( 'pa_brand', $data['producer'] );
+	$attributes = array();
+	$size_slugs = array();
+	$color_slug = fashion_brand_theme_matterhorn_ensure_term( 'pa_color', $color_label );
+	$brand_slug = fashion_brand_theme_matterhorn_ensure_term( 'pa_brand', $data['producer'] );
 
 	foreach ( $enabled_sizes as $size ) {
 		$slug = fashion_brand_theme_matterhorn_ensure_term( 'pa_size', $size['name'] );
@@ -729,7 +920,6 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 		throw new Exception( 'WooCommerce product save returned empty ID.' );
 	}
 
-	// Re-fetch for type-specific work.
 	$product = wc_get_product( $product_id );
 
 	if ( ! empty( $size_slugs ) ) {
@@ -747,7 +937,6 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 		wp_set_object_terms( $product_id, array( $cat_id ), 'product_cat' );
 	}
 
-	// Images.
 	$image_ids = array();
 	foreach ( $data['photos'] as $photo_url ) {
 		$aid = fashion_brand_theme_matterhorn_sideload_image( $photo_url, $product_id );
@@ -758,8 +947,7 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 
 	if ( ! empty( $image_ids ) ) {
 		$product->set_image_id( $image_ids[0] );
-		$gallery = array_slice( $image_ids, 1 );
-		$product->set_gallery_image_ids( $gallery );
+		$product->set_gallery_image_ids( array_slice( $image_ids, 1 ) );
 		$product->save();
 	}
 
@@ -769,7 +957,8 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 			$enabled_sizes,
 			$regular_price,
 			$sale_price,
-			$sku
+			$sku,
+			$matterhorn_id
 		);
 	}
 
@@ -782,6 +971,298 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
 }
 
 /**
+ * Create/update a multi-color variable product (Color × Size variations).
+ *
+ * @param array<int, array<string, mixed>> $variants         Parsed feed products (one per color).
+ * @param int                              $category_term_id product_cat term ID.
+ * @param array<string, mixed>             $group_row        Index group row.
+ * @return array{action:string,sku:string,type:string,id:int}
+ * @throws Exception On save failure.
+ */
+function fashion_brand_theme_matterhorn_upsert_color_group( array $variants, $category_term_id, array $group_row ) {
+	$group_key = isset( $group_row['id'] ) ? (string) $group_row['id'] : (string) ( $variants[0]['_group_key'] ?? '' );
+	$existing_id = '' !== $group_key ? fashion_brand_theme_matterhorn_find_product_by_group_key( $group_key ) : 0;
+
+	// Migrate: if sibling colors were previously imported as separate products, fold them in.
+	$orphan_ids = array();
+	foreach ( $variants as $variant ) {
+		$vid = fashion_brand_theme_matterhorn_find_product_id( (string) ( $variant['product_id'] ?? '' ) );
+		if ( $vid && (int) $vid !== (int) $existing_id ) {
+			$orphan_ids[] = (int) $vid;
+		}
+	}
+	$orphan_ids = array_values( array_unique( $orphan_ids ) );
+
+	if ( ! $existing_id && ! empty( $orphan_ids ) ) {
+		$existing_id = $orphan_ids[0];
+		array_shift( $orphan_ids );
+	}
+
+	$action = 'created';
+	if ( $existing_id ) {
+		$product = wc_get_product( $existing_id );
+		if ( $product && ! $product->is_type( 'variable' ) ) {
+			wp_delete_post( $existing_id, true );
+			$existing_id = 0;
+			$product     = null;
+		} elseif ( $product ) {
+			$action = 'updated';
+		} else {
+			$existing_id = 0;
+		}
+	}
+
+	foreach ( $orphan_ids as $orphan_id ) {
+		if ( (int) $orphan_id !== (int) $existing_id ) {
+			wp_delete_post( (int) $orphan_id, true );
+		}
+	}
+
+	if ( ! $existing_id ) {
+		$product = new WC_Product_Variable();
+		$action  = 'created';
+	}
+
+	$first       = $variants[0];
+	$color_label = (string) ( $first['_extracted_color'] ?? $first['color'] ?? '' );
+	$display     = isset( $group_row['name'] ) && '' !== $group_row['name']
+		? (string) $group_row['name']
+		: fashion_brand_theme_matterhorn_style_display_name( $first['name'], $color_label );
+
+	$is_visible = false;
+	foreach ( $variants as $variant ) {
+		if ( 'visible' === strtolower( trim( (string) ( $variant['available'] ?? '' ) ) ) ) {
+			$is_visible = true;
+			break;
+		}
+	}
+
+	$product->set_name( $display );
+	$product->set_status( $is_visible ? 'publish' : 'draft' );
+	$product->set_catalog_visibility( $is_visible ? 'visible' : 'hidden' );
+	$product->set_description( fashion_brand_theme_matterhorn_clean_description( $first['description'] ?? '' ) );
+	$product->set_short_description( '' );
+	$product->set_manage_stock( false );
+	$product->set_sku( 'MH-' . substr( md5( $group_key ), 0, 12 ) );
+
+	$product->update_meta_data( '_matterhorn_group_key', $group_key );
+	$product->update_meta_data( '_matterhorn_brand', $first['producer'] ?? '' );
+
+	$color_slugs = array();
+	$size_slugs  = array();
+
+	foreach ( $variants as $variant ) {
+		$label = (string) ( $variant['_extracted_color'] ?? $variant['color'] ?? '' );
+		$slug  = fashion_brand_theme_matterhorn_ensure_term( 'pa_color', $label );
+		if ( '' !== $slug ) {
+			$color_slugs[] = $slug;
+		}
+		foreach ( $variant['sizes'] as $size ) {
+			$enabled = isset( $size['enabled'] ) ? strtolower( (string) $size['enabled'] ) : '1';
+			$name    = isset( $size['name'] ) ? trim( (string) $size['name'] ) : '';
+			if ( '' === $name || in_array( $enabled, array( '0', 'false', 'no' ), true ) ) {
+				continue;
+			}
+			$ss = fashion_brand_theme_matterhorn_ensure_term( 'pa_size', $name );
+			if ( '' !== $ss ) {
+				$size_slugs[] = $ss;
+			}
+		}
+	}
+
+	$color_slugs = array_values( array_unique( $color_slugs ) );
+	$size_slugs  = array_values( array_unique( $size_slugs ) );
+
+	$attributes = array();
+
+	if ( ! empty( $color_slugs ) ) {
+		$color_attr = new WC_Product_Attribute();
+		$color_attr->set_id( wc_attribute_taxonomy_id_by_name( 'pa_color' ) );
+		$color_attr->set_name( 'pa_color' );
+		$color_attr->set_options( $color_slugs );
+		$color_attr->set_visible( true );
+		$color_attr->set_variation( true );
+		$attributes[] = $color_attr;
+	}
+
+	if ( ! empty( $size_slugs ) ) {
+		$size_attr = new WC_Product_Attribute();
+		$size_attr->set_id( wc_attribute_taxonomy_id_by_name( 'pa_size' ) );
+		$size_attr->set_name( 'pa_size' );
+		$size_attr->set_options( $size_slugs );
+		$size_attr->set_visible( true );
+		$size_attr->set_variation( true );
+		$attributes[] = $size_attr;
+	}
+
+	$brand_slug = fashion_brand_theme_matterhorn_ensure_term( 'pa_brand', $first['producer'] ?? '' );
+	if ( '' !== $brand_slug ) {
+		$brand_attr = new WC_Product_Attribute();
+		$brand_attr->set_id( wc_attribute_taxonomy_id_by_name( 'pa_brand' ) );
+		$brand_attr->set_name( 'pa_brand' );
+		$brand_attr->set_options( array( $brand_slug ) );
+		$brand_attr->set_visible( true );
+		$brand_attr->set_variation( false );
+		$attributes[] = $brand_attr;
+	}
+
+	$product->set_attributes( $attributes );
+	$parent_id = $product->save();
+
+	if ( ! $parent_id ) {
+		throw new Exception( 'Failed to save color-group variable product.' );
+	}
+
+	$product = wc_get_product( $parent_id );
+
+	wp_set_object_terms( $parent_id, $color_slugs, 'pa_color' );
+	wp_set_object_terms( $parent_id, $size_slugs, 'pa_size' );
+	if ( '' !== $brand_slug ) {
+		wp_set_object_terms( $parent_id, array( $brand_slug ), 'pa_brand' );
+	}
+	if ( $category_term_id > 0 ) {
+		wp_set_object_terms( $parent_id, array( (int) $category_term_id ), 'product_cat' );
+	}
+
+	// Featured image from first variant.
+	$gallery_ids = array();
+	$first_image = 0;
+	foreach ( $variants as $variant ) {
+		foreach ( $variant['photos'] as $i => $url ) {
+			$aid = fashion_brand_theme_matterhorn_sideload_image( $url, $parent_id );
+			if ( $aid <= 0 ) {
+				continue;
+			}
+			if ( ! $first_image ) {
+				$first_image = $aid;
+			} else {
+				$gallery_ids[] = $aid;
+			}
+		}
+	}
+	if ( $first_image ) {
+		$product->set_image_id( $first_image );
+		$product->set_gallery_image_ids( array_values( array_unique( $gallery_ids ) ) );
+		$product->save();
+	}
+
+	fashion_brand_theme_matterhorn_sync_color_size_variations( $product, $variants );
+
+	return array(
+		'action' => $action,
+		'sku'    => $product->get_sku(),
+		'type'   => 'variable',
+		'id'     => $parent_id,
+	);
+}
+
+/**
+ * Sync Color × Size variations for a grouped variable product.
+ *
+ * @param WC_Product_Variable          $product  Parent.
+ * @param array<int, array<string,mixed>> $variants Parsed color variants.
+ * @return void
+ */
+function fashion_brand_theme_matterhorn_sync_color_size_variations( WC_Product_Variable $product, array $variants ) {
+	$parent_id     = $product->get_id();
+	$existing_vars = $product->get_children();
+	$kept_ids      = array();
+	$lookup        = array();
+
+	foreach ( $existing_vars as $variation_id ) {
+		$mid = (string) get_post_meta( $variation_id, '_matterhorn_product_id', true );
+		$uid = (string) get_post_meta( $variation_id, '_matterhorn_size_uid', true );
+		$key = $mid . '|' . $uid;
+		if ( '' !== $mid ) {
+			$lookup[ $key ] = (int) $variation_id;
+		}
+	}
+
+	foreach ( $variants as $variant ) {
+		$matterhorn_id = (string) $variant['product_id'];
+		$color_label   = (string) ( $variant['_extracted_color'] ?? $variant['color'] ?? '' );
+		$color_slug    = fashion_brand_theme_matterhorn_ensure_term( 'pa_color', $color_label );
+		$regular_price = fashion_brand_theme_matterhorn_apply_markup( $variant['price_netto'] );
+		$on_sale       = ( '1' === (string) $variant['sale'] || 1 === (int) $variant['sale'] ) && (float) $variant['sale_price_netto'] > 0;
+		$sale_price    = $on_sale ? fashion_brand_theme_matterhorn_apply_markup( $variant['sale_price_netto'] ) : '';
+
+		$image_id = 0;
+		if ( ! empty( $variant['photos'][0] ) ) {
+			$image_id = fashion_brand_theme_matterhorn_sideload_image( $variant['photos'][0], $parent_id );
+		}
+
+		foreach ( $variant['sizes'] as $size ) {
+			$enabled = isset( $size['enabled'] ) ? strtolower( (string) $size['enabled'] ) : '1';
+			$name    = isset( $size['name'] ) ? trim( (string) $size['name'] ) : '';
+			if ( '' === $name || in_array( $enabled, array( '0', 'false', 'no' ), true ) ) {
+				continue;
+			}
+
+			$size_slug = fashion_brand_theme_matterhorn_ensure_term( 'pa_size', $name );
+			if ( '' === $size_slug || '' === $color_slug ) {
+				continue;
+			}
+
+			$uid = (string) ( $size['uid'] ?? '' );
+			$key = $matterhorn_id . '|' . $uid;
+			$vid = isset( $lookup[ $key ] ) ? $lookup[ $key ] : 0;
+
+			if ( $vid ) {
+				$variation = wc_get_product( $vid );
+				if ( ! $variation instanceof WC_Product_Variation ) {
+					$variation = new WC_Product_Variation();
+				}
+			} else {
+				$variation = new WC_Product_Variation();
+			}
+
+			$variation->set_parent_id( $parent_id );
+			$variation->set_attributes(
+				array(
+					'pa_color' => $color_slug,
+					'pa_size'  => $size_slug,
+				)
+			);
+			$variation->set_status( 'publish' );
+			$variation->set_regular_price( $regular_price );
+			$variation->set_sale_price( $sale_price );
+			$variation->set_manage_stock( true );
+
+			$qty = max( 0, (int) ( $size['count'] ?? 0 ) );
+			$variation->set_stock_quantity( $qty );
+			$variation->set_stock_status( $qty > 0 ? 'instock' : 'outofstock' );
+
+			if ( $image_id ) {
+				$variation->set_image_id( $image_id );
+			}
+
+			$variation->update_meta_data( '_matterhorn_product_id', $matterhorn_id );
+			if ( '' !== $uid ) {
+				$variation->update_meta_data( '_matterhorn_size_uid', $uid );
+			}
+
+			$code = (string) ( $variant['code'] ?? '' );
+			if ( '' !== $code ) {
+				$variation->set_sku( $code . '-' . strtoupper( $size_slug ) );
+			}
+
+			$new_id = $variation->save();
+			if ( $new_id ) {
+				$kept_ids[] = (int) $new_id;
+			}
+		}
+	}
+
+	foreach ( $existing_vars as $variation_id ) {
+		if ( ! in_array( (int) $variation_id, $kept_ids, true ) ) {
+			wp_delete_post( (int) $variation_id, true );
+		}
+	}
+
+	WC_Product_Variable::sync( $parent_id );
+}
+
+/**
  * Sync size variations for a variable product.
  *
  * @param WC_Product_Variable $product       Parent product.
@@ -789,9 +1270,10 @@ function fashion_brand_theme_matterhorn_upsert_product( array $data, $category_t
  * @param string              $regular_price Regular price string.
  * @param string              $sale_price    Sale price string (may be empty).
  * @param string              $parent_sku    Parent SKU for variation SKU suffix.
+ * @param string              $matterhorn_id Optional feed product_id stored on each variation.
  * @return void
  */
-function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $product, array $enabled_sizes, $regular_price, $sale_price, $parent_sku ) {
+function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $product, array $enabled_sizes, $regular_price, $sale_price, $parent_sku, $matterhorn_id = '' ) {
 	$parent_id      = $product->get_id();
 	$existing_vars  = $product->get_children();
 	$kept_ids       = array();
@@ -843,6 +1325,9 @@ function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $pr
 		if ( '' !== $uid ) {
 			$variation->update_meta_data( '_matterhorn_size_uid', $uid );
 		}
+		if ( '' !== $matterhorn_id ) {
+			$variation->update_meta_data( '_matterhorn_product_id', $matterhorn_id );
+		}
 
 		$new_id = $variation->save();
 		if ( $new_id ) {
@@ -850,7 +1335,6 @@ function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $pr
 		}
 	}
 
-	// Remove stale variations no longer in the feed.
 	foreach ( $existing_vars as $variation_id ) {
 		if ( ! in_array( (int) $variation_id, $kept_ids, true ) ) {
 			wp_delete_post( (int) $variation_id, true );
@@ -861,7 +1345,8 @@ function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $pr
 }
 
 /**
- * Shared single-product import entry point (CLI + admin AJAX).
+ * Shared single-product / group import entry for one parsed feed product.
+ * Skips unrecognized colors; attaches to a color-grouped parent when applicable.
  *
  * @param array<string, mixed> $product_data Parsed product node.
  * @return array<string, mixed>
@@ -874,6 +1359,16 @@ function fashion_brand_theme_matterhorn_import_parsed_product( array $product_da
 			'status'     => 'skipped_other',
 			'product_id' => '',
 			'message'    => 'Missing product_id.',
+		);
+	}
+
+	$extracted = fashion_brand_theme_matterhorn_extract_style_and_color( $product_data['code'] ?? '' );
+
+	if ( null === $extracted ) {
+		return array(
+			'status'     => 'skipped_unrecognized_color',
+			'product_id' => $product_id,
+			'message'    => sprintf( 'Unrecognized color in code "%s".', $product_data['code'] ?? '' ),
 		);
 	}
 
@@ -901,11 +1396,18 @@ function fashion_brand_theme_matterhorn_import_parsed_product( array $product_da
 		);
 	}
 
+	$product_data['_extracted_color']     = $extracted['color'];
+	$product_data['_extracted_style_key'] = $extracted['style_key'];
+	$product_data['_group_key']           = fashion_brand_theme_matterhorn_group_key(
+		$product_data['producer'] ?? '',
+		$extracted['style_key']
+	);
+
 	try {
 		$result = fashion_brand_theme_matterhorn_upsert_product( $product_data, (int) $cat_term->term_id );
 
 		return array(
-			'status'     => $result['action'], // created | updated
+			'status'     => $result['action'],
 			'product_id' => $product_id,
 			'sku'        => $result['sku'],
 			'type'       => $result['type'],
@@ -923,7 +1425,83 @@ function fashion_brand_theme_matterhorn_import_parsed_product( array $product_da
 }
 
 /**
- * Build lightweight index.json from the XML feed (metadata only).
+ * Import a grouped index row (simple or multi-color variable).
+ *
+ * @param array<string, mixed>       $group_row Index row.
+ * @param array<string, array>       $parsed_by_id Map of matterhorn_id => parsed product data.
+ * @return array<string, mixed>
+ */
+function fashion_brand_theme_matterhorn_import_group_row( array $group_row, array $parsed_by_id ) {
+	$group_key = isset( $group_row['id'] ) ? (string) $group_row['id'] : '';
+	$variants  = isset( $group_row['variants'] ) && is_array( $group_row['variants'] ) ? $group_row['variants'] : array();
+
+	if ( '' === $group_key || empty( $variants ) ) {
+		return array(
+			'status'     => 'skipped_other',
+			'product_id' => $group_key,
+			'message'    => 'Empty group.',
+		);
+	}
+
+	$parsed_variants = array();
+	foreach ( $variants as $variant ) {
+		$vid = isset( $variant['id'] ) ? (string) $variant['id'] : '';
+		if ( '' === $vid || empty( $parsed_by_id[ $vid ] ) ) {
+			continue;
+		}
+		$data                              = $parsed_by_id[ $vid ];
+		$data['_extracted_color']          = isset( $variant['color'] ) ? (string) $variant['color'] : ( $data['color'] ?? '' );
+		$data['_extracted_style_key']      = isset( $group_row['style_key'] ) ? (string) $group_row['style_key'] : '';
+		$data['_group_key']                = $group_key;
+		$parsed_variants[]                 = $data;
+	}
+
+	if ( empty( $parsed_variants ) ) {
+		return array(
+			'status'     => 'skipped_other',
+			'product_id' => $group_key,
+			'message'    => 'No variant XML data found for group.',
+		);
+	}
+
+	$category_slug = isset( $group_row['category'] ) ? (string) $group_row['category'] : '';
+	$cat_term      = get_term_by( 'slug', $category_slug, 'product_cat' );
+
+	if ( ! $cat_term || is_wp_error( $cat_term ) ) {
+		return array(
+			'status'     => 'skipped_other',
+			'product_id' => $group_key,
+			'message'    => sprintf( 'product_cat slug "%s" missing.', $category_slug ),
+		);
+	}
+
+	try {
+		if ( ! empty( $group_row['color_count'] ) && (int) $group_row['color_count'] > 1 ) {
+			$result = fashion_brand_theme_matterhorn_upsert_color_group( $parsed_variants, (int) $cat_term->term_id, $group_row );
+		} else {
+			$result = fashion_brand_theme_matterhorn_upsert_product( $parsed_variants[0], (int) $cat_term->term_id );
+		}
+
+		return array(
+			'status'     => $result['action'],
+			'product_id' => $group_key,
+			'sku'        => $result['sku'],
+			'type'       => $result['type'],
+			'category'   => $category_slug,
+			'wc_id'      => $result['id'],
+			'message'    => '',
+		);
+	} catch ( Exception $e ) {
+		return array(
+			'status'     => 'error',
+			'product_id' => $group_key,
+			'message'    => $e->getMessage(),
+		);
+	}
+}
+
+/**
+ * Build lightweight index.json from the XML feed (grouped by color style).
  *
  * @return array<string, mixed>|WP_Error Index payload on success.
  */
@@ -945,9 +1523,10 @@ function fashion_brand_theme_matterhorn_build_index() {
 		return new WP_Error( 'matterhorn_feed_unreadable', 'Could not open feed with XMLReader.' );
 	}
 
-	$products        = array();
-	$total_in_feed   = 0;
-	$unmapped_count  = 0;
+	$groups                   = array();
+	$total_in_feed            = 0;
+	$unmapped_count           = 0;
+	$unrecognized_color_count = 0;
 
 	while ( $reader->read() ) {
 		if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
@@ -975,6 +1554,15 @@ function fashion_brand_theme_matterhorn_build_index() {
 			continue;
 		}
 
+		$extracted = fashion_brand_theme_matterhorn_extract_style_and_color( $data['code'] );
+
+		if ( null === $extracted ) {
+			++$unrecognized_color_count;
+			continue;
+		}
+
+		$group_key = fashion_brand_theme_matterhorn_group_key( $data['producer'], $extracted['style_key'] );
+
 		$size_labels = array();
 		foreach ( $data['sizes'] as $size ) {
 			$name = isset( $size['name'] ) ? trim( (string) $size['name'] ) : '';
@@ -987,10 +1575,11 @@ function fashion_brand_theme_matterhorn_build_index() {
 			);
 		}
 
-		$products[] = array(
+		$variant = array(
 			'id'               => (string) $data['product_id'],
+			'color'            => $extracted['color'],
+			'code'             => (string) $data['code'],
 			'name'             => (string) $data['name'],
-			'category'         => $category_slug,
 			'price_netto'      => (float) $data['price_netto'],
 			'sale'             => (string) $data['sale'],
 			'sale_price_netto' => (float) $data['sale_price_netto'],
@@ -998,18 +1587,82 @@ function fashion_brand_theme_matterhorn_build_index() {
 			'sizes'            => $size_labels,
 		);
 
+		if ( ! isset( $groups[ $group_key ] ) ) {
+			$groups[ $group_key ] = array(
+				'id'         => $group_key,
+				'style_key'  => $extracted['style_key'],
+				'producer'   => (string) $data['producer'],
+				'category'   => $category_slug,
+				'variants'   => array(),
+			);
+		}
+
+		$groups[ $group_key ]['variants'][] = $variant;
+
 		unset( $node_xml, $data );
 	}
 
 	$reader->close();
 
+	$products = array();
+
+	foreach ( $groups as $group ) {
+		$variants    = $group['variants'];
+		$color_count = count( $variants );
+		$is_variable = $color_count > 1;
+
+		$all_sizes = array();
+		$colors    = array();
+		foreach ( $variants as $variant ) {
+			$colors[] = $variant['color'];
+			foreach ( $variant['sizes'] as $size ) {
+				$all_sizes[ $size['name'] ] = $size;
+			}
+		}
+
+		$first = $variants[0];
+
+		$products[] = array(
+			'id'               => $group['id'],
+			'type'             => $is_variable ? 'variable' : 'simple',
+			'name'             => fashion_brand_theme_matterhorn_style_display_name( $first['name'], $first['color'] ),
+			'category'         => $group['category'],
+			'producer'         => $group['producer'],
+			'style_key'        => $group['style_key'],
+			'price_netto'      => (float) $first['price_netto'],
+			'sale'             => (string) $first['sale'],
+			'sale_price_netto' => (float) $first['sale_price_netto'],
+			'photo'            => (string) $first['photo'],
+			'sizes'            => array_values( $all_sizes ),
+			'color_count'      => $color_count,
+			'colors'           => array_values( array_unique( $colors ) ),
+			'variants'         => $variants,
+			'variant_ids'      => array_values(
+				array_map(
+					static function ( $v ) {
+						return (string) $v['id'];
+					},
+					$variants
+				)
+			),
+		);
+	}
+
+	usort(
+		$products,
+		static function ( $a, $b ) {
+			return strcasecmp( (string) $a['name'], (string) $b['name'] );
+		}
+	);
+
 	$index = array(
-		'built_at'       => time(),
-		'total_in_feed'  => $total_in_feed,
-		'mapped_count'   => count( $products ),
-		'unmapped_count' => $unmapped_count,
-		'markup'         => (float) MATTERHORN_PRICE_MARKUP_MULTIPLIER,
-		'products'       => $products,
+		'built_at'                  => time(),
+		'total_in_feed'             => $total_in_feed,
+		'mapped_count'              => count( $products ),
+		'unmapped_count'            => $unmapped_count,
+		'unrecognized_color_count'  => $unrecognized_color_count,
+		'markup'                    => (float) MATTERHORN_PRICE_MARKUP_MULTIPLIER,
+		'products'                  => $products,
 	);
 
 	$written = file_put_contents(
@@ -1022,6 +1675,27 @@ function fashion_brand_theme_matterhorn_build_index() {
 	}
 
 	return $index;
+}
+
+/**
+ * Derive a style display name by stripping a trailing color label when present.
+ *
+ * @param string $name  Feed product name.
+ * @param string $color Extracted color label.
+ * @return string
+ */
+function fashion_brand_theme_matterhorn_style_display_name( $name, $color ) {
+	$name  = trim( (string) $name );
+	$color = trim( (string) $color );
+
+	if ( '' === $color || '' === $name ) {
+		return $name;
+	}
+
+	$pattern = '/[\s,\/\-]*' . preg_quote( $color, '/' ) . '\s*$/iu';
+	$stripped = preg_replace( $pattern, '', $name );
+
+	return trim( (string) $stripped ) !== '' ? trim( (string) $stripped ) : $name;
 }
 
 /**
@@ -1048,97 +1722,122 @@ function fashion_brand_theme_matterhorn_load_index() {
 }
 
 /**
- * Import a batch of Matterhorn product IDs by streaming the XML once.
+ * Import selected index group keys (admin AJAX).
  *
- * @param array<int, string> $product_ids Matterhorn product_id values.
+ * @param array<int, string> $group_keys Group keys from index row `id`.
  * @return array{results:array<int,array>,summary:array<string,int>}
  */
-function fashion_brand_theme_matterhorn_import_product_ids( array $product_ids ) {
-	$wanted = array();
-	foreach ( $product_ids as $id ) {
-		$id = (string) $id;
-		if ( '' !== $id ) {
-			$wanted[ $id ] = true;
+function fashion_brand_theme_matterhorn_import_product_ids( array $group_keys ) {
+	// Kept name for AJAX BC; values are group keys (or legacy matterhorn IDs).
+	return fashion_brand_theme_matterhorn_import_group_keys( $group_keys );
+}
+
+/**
+ * Import a batch of index group keys by streaming the XML once.
+ *
+ * @param array<int, string> $group_keys Group keys.
+ * @return array{results:array<int,array>,summary:array<string,int>}
+ */
+function fashion_brand_theme_matterhorn_import_group_keys( array $group_keys ) {
+	$wanted_keys = array();
+	foreach ( $group_keys as $key ) {
+		$key = (string) $key;
+		if ( '' !== $key ) {
+			$wanted_keys[ $key ] = true;
 		}
 	}
 
 	$summary = array(
-		'created'          => 0,
-		'updated'          => 0,
-		'skipped_unmapped' => 0,
-		'skipped_other'    => 0,
-		'errors'           => 0,
-		'not_found'        => 0,
+		'created'                    => 0,
+		'updated'                    => 0,
+		'skipped_unmapped'           => 0,
+		'skipped_other'              => 0,
+		'skipped_unrecognized_color' => 0,
+		'errors'                     => 0,
+		'not_found'                  => 0,
 	);
 	$results = array();
 
-	if ( empty( $wanted ) ) {
+	if ( empty( $wanted_keys ) ) {
 		return array(
 			'results' => $results,
 			'summary' => $summary,
 		);
 	}
 
+	$index = fashion_brand_theme_matterhorn_load_index();
+	$groups_by_key = array();
+	$needed_ids    = array();
+
+	if ( $index && ! empty( $index['products'] ) ) {
+		foreach ( $index['products'] as $row ) {
+			$gid = isset( $row['id'] ) ? (string) $row['id'] : '';
+			if ( isset( $wanted_keys[ $gid ] ) ) {
+				$groups_by_key[ $gid ] = $row;
+				foreach ( $row['variant_ids'] ?? array() as $vid ) {
+					$needed_ids[ (string) $vid ] = true;
+				}
+				// Legacy single-id rows.
+				if ( empty( $row['variant_ids'] ) && isset( $row['id'] ) && false === strpos( $gid, '|' ) ) {
+					$needed_ids[ $gid ] = true;
+				}
+			}
+		}
+	}
+
 	fashion_brand_theme_matterhorn_bootstrap_import();
 
 	$feed = fashion_brand_theme_matterhorn_feed_path();
+	$parsed_by_id = array();
 
-	if ( ! file_exists( $feed ) ) {
-		$summary['errors'] = count( $wanted );
-		return array(
-			'results' => array(
-				array(
-					'status'     => 'error',
-					'product_id' => '',
-					'message'    => 'Feed file missing.',
-				),
-			),
-			'summary' => $summary,
-		);
-	}
+	if ( file_exists( $feed ) && ! empty( $needed_ids ) ) {
+		$reader = new XMLReader();
+		if ( $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
+			$remaining = $needed_ids;
+			while ( $reader->read() && ! empty( $remaining ) ) {
+				if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
+					continue;
+				}
 
-	$remaining = $wanted;
-	$reader    = new XMLReader();
+				$attrs = array();
+				if ( $reader->hasAttributes ) {
+					while ( $reader->moveToNextAttribute() ) {
+						$attrs[ $reader->name ] = $reader->value;
+					}
+					$reader->moveToElement();
+				}
 
-	if ( ! $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
-		$summary['errors'] = count( $wanted );
-		return array(
-			'results' => array(
-				array(
-					'status'     => 'error',
-					'product_id' => '',
-					'message'    => 'Could not open feed.',
-				),
-			),
-			'summary' => $summary,
-		);
-	}
+				$pid = isset( $attrs['product_id'] ) ? (string) $attrs['product_id'] : '';
+				if ( '' === $pid || ! isset( $remaining[ $pid ] ) ) {
+					continue;
+				}
 
-	while ( $reader->read() && ! empty( $remaining ) ) {
-		if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
-			continue;
-		}
-
-		$attrs = array();
-		if ( $reader->hasAttributes ) {
-			while ( $reader->moveToNextAttribute() ) {
-				$attrs[ $reader->name ] = $reader->value;
+				$node_xml              = $reader->readOuterXML();
+				$parsed_by_id[ $pid ]  = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
+				unset( $remaining[ $pid ], $node_xml );
 			}
-			$reader->moveToElement();
+			$reader->close();
 		}
+	}
 
-		$pid = isset( $attrs['product_id'] ) ? (string) $attrs['product_id'] : '';
-
-		if ( '' === $pid || ! isset( $remaining[ $pid ] ) ) {
+	foreach ( array_keys( $wanted_keys ) as $group_key ) {
+		if ( isset( $groups_by_key[ $group_key ] ) ) {
+			$result = fashion_brand_theme_matterhorn_import_group_row( $groups_by_key[ $group_key ], $parsed_by_id );
+		} elseif ( isset( $parsed_by_id[ $group_key ] ) ) {
+			// Legacy: bare matterhorn product_id.
+			$result = fashion_brand_theme_matterhorn_import_parsed_product( $parsed_by_id[ $group_key ] );
+		} else {
+			$result = array(
+				'status'     => 'skipped_other',
+				'product_id' => $group_key,
+				'message'    => sprintf( 'Group "%s" not found in index/feed.', $group_key ),
+			);
+			++$summary['not_found'];
+			$results[] = $result;
 			continue;
 		}
-
-		$node_xml = $reader->readOuterXML();
-		$data     = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
-		$result   = fashion_brand_theme_matterhorn_import_parsed_product( $data );
 
 		$results[] = $result;
-		unset( $remaining[ $pid ] );
 
 		switch ( $result['status'] ) {
 			case 'created':
@@ -1150,6 +1849,9 @@ function fashion_brand_theme_matterhorn_import_product_ids( array $product_ids )
 			case 'skipped_unmapped':
 				++$summary['skipped_unmapped'];
 				break;
+			case 'skipped_unrecognized_color':
+				++$summary['skipped_unrecognized_color'];
+				break;
 			case 'skipped_other':
 				++$summary['skipped_other'];
 				break;
@@ -1157,25 +1859,120 @@ function fashion_brand_theme_matterhorn_import_product_ids( array $product_ids )
 				++$summary['errors'];
 				break;
 		}
-
-		unset( $node_xml, $data );
-	}
-
-	$reader->close();
-
-	foreach ( array_keys( $remaining ) as $missing_id ) {
-		++$summary['not_found'];
-		$results[] = array(
-			'status'     => 'skipped_other',
-			'product_id' => $missing_id,
-			'message'    => sprintf( 'Product #%s not found in feed.', $missing_id ),
-		);
 	}
 
 	return array(
 		'results' => $results,
 		'summary' => $summary,
 	);
+}
+
+/**
+ * Status map for index group rows vs existing WooCommerce products.
+ *
+ * @param array<int, array<string, mixed>> $group_rows Index rows on the current page.
+ * @return array<string, string> group_key => new|partial|imported
+ */
+function fashion_brand_theme_matterhorn_group_status_map( array $group_rows ) {
+	$map = array();
+
+	foreach ( $group_rows as $row ) {
+		$gid         = isset( $row['id'] ) ? (string) $row['id'] : '';
+		$variant_ids = isset( $row['variant_ids'] ) && is_array( $row['variant_ids'] )
+			? array_map( 'strval', $row['variant_ids'] )
+			: array( $gid );
+
+		if ( '' === $gid ) {
+			continue;
+		}
+
+		$parent_id = fashion_brand_theme_matterhorn_find_product_by_group_key( $gid );
+		if ( ! $parent_id && count( $variant_ids ) === 1 ) {
+			$parent_id = fashion_brand_theme_matterhorn_find_product_id( $variant_ids[0] );
+		}
+
+		if ( ! $parent_id ) {
+			// Check variation-level matterhorn IDs.
+			$found = 0;
+			foreach ( $variant_ids as $vid ) {
+				if ( fashion_brand_theme_matterhorn_find_variation_by_matterhorn_id( $vid ) ) {
+					++$found;
+				}
+			}
+			if ( 0 === $found ) {
+				$map[ $gid ] = 'new';
+			} elseif ( $found >= count( $variant_ids ) ) {
+				$map[ $gid ] = 'imported';
+			} else {
+				$map[ $gid ] = 'partial';
+			}
+			continue;
+		}
+
+		$found = 0;
+		foreach ( $variant_ids as $vid ) {
+			if ( fashion_brand_theme_matterhorn_product_has_matterhorn_id( $parent_id, $vid ) ) {
+				++$found;
+			}
+		}
+
+		if ( 0 === $found ) {
+			$map[ $gid ] = 'new';
+		} elseif ( $found >= count( $variant_ids ) ) {
+			$map[ $gid ] = 'imported';
+		} else {
+			$map[ $gid ] = 'partial';
+		}
+	}
+
+	return $map;
+}
+
+/**
+ * Whether a parent product (or its variations) owns a Matterhorn product_id.
+ *
+ * @param int    $parent_id     WC product ID.
+ * @param string $matterhorn_id Feed product_id.
+ * @return bool
+ */
+function fashion_brand_theme_matterhorn_product_has_matterhorn_id( $parent_id, $matterhorn_id ) {
+	if ( (string) get_post_meta( $parent_id, '_matterhorn_product_id', true ) === (string) $matterhorn_id ) {
+		return true;
+	}
+
+	$product = wc_get_product( $parent_id );
+	if ( ! $product || ! $product->is_type( 'variable' ) ) {
+		return false;
+	}
+
+	foreach ( $product->get_children() as $vid ) {
+		if ( (string) get_post_meta( $vid, '_matterhorn_product_id', true ) === (string) $matterhorn_id ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Find a variation ID by Matterhorn product_id meta.
+ *
+ * @param string $matterhorn_id Feed product_id.
+ * @return int
+ */
+function fashion_brand_theme_matterhorn_find_variation_by_matterhorn_id( $matterhorn_id ) {
+	$ids = get_posts(
+		array(
+			'post_type'      => 'product_variation',
+			'post_status'    => array( 'publish', 'private' ),
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'meta_key'       => '_matterhorn_product_id',
+			'meta_value'     => (string) $matterhorn_id,
+		)
+	);
+
+	return ! empty( $ids[0] ) ? (int) $ids[0] : 0;
 }
 
 /**
@@ -1194,7 +1991,7 @@ function fashion_brand_theme_matterhorn_existing_map( array $product_ids ) {
 
 	$query = new WP_Query(
 		array(
-			'post_type'              => 'product',
+			'post_type'              => array( 'product', 'product_variation' ),
 			'post_status'            => 'any',
 			'posts_per_page'         => count( $product_ids ),
 			'fields'                 => 'ids',

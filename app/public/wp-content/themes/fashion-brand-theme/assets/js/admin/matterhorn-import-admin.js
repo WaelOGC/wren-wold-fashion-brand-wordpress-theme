@@ -145,6 +145,7 @@
 			updated: 0,
 			skipped_unmapped: 0,
 			skipped_other: 0,
+			skipped_unrecognized_color: 0,
 			errors: 0,
 			not_found: 0,
 		};
@@ -239,7 +240,10 @@
 					', updated: ' +
 					totals.updated +
 					', skipped: ' +
-					( totals.skipped_unmapped + totals.skipped_other + totals.not_found ) +
+					( totals.skipped_unmapped +
+						totals.skipped_other +
+						totals.skipped_unrecognized_color +
+						totals.not_found ) +
 					', errors: ' +
 					totals.errors +
 					'.' +

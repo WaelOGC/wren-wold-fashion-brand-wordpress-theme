@@ -124,6 +124,7 @@ function fashion_brand_theme_matterhorn_admin_build_index() {
 				'matterhorn_index' => 'ok',
 				'mapped'           => (int) $result['mapped_count'],
 				'unmapped'         => (int) $result['unmapped_count'],
+				'unrecog'          => (int) ( $result['unrecognized_color_count'] ?? 0 ),
 			),
 			$redirect
 		);
@@ -209,10 +210,11 @@ function fashion_brand_theme_matterhorn_admin_page() {
 	if ( isset( $_GET['matterhorn_index'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( 'ok' === $_GET['matterhorn_index'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$notice = sprintf(
-				/* translators: 1: mapped count, 2: unmapped count */
-				__( 'Index built. %1$d mapped products indexed; %2$d unmapped skipped.', 'fashion-brand-theme' ),
+				/* translators: 1: mapped count, 2: unmapped count, 3: unrecognized color count */
+				__( 'Index built. %1$d style groups indexed; %2$d unmapped category; %3$d skipped (unrecognized color).', 'fashion-brand-theme' ),
 				isset( $_GET['mapped'] ) ? (int) $_GET['mapped'] : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-				isset( $_GET['unmapped'] ) ? (int) $_GET['unmapped'] : 0 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				isset( $_GET['unmapped'] ) ? (int) $_GET['unmapped'] : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				isset( $_GET['unrecog'] ) ? (int) $_GET['unrecog'] : 0 // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			);
 		} elseif ( 'error' === $_GET['matterhorn_index'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$notice = isset( $_GET['matterhorn_msg'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -256,13 +258,7 @@ function fashion_brand_theme_matterhorn_admin_page() {
 	$offset         = ( $page - 1 ) * $per_page;
 	$page_rows      = array_slice( $products, $offset, $per_page );
 
-	$page_ids      = array_map(
-		static function ( $row ) {
-			return isset( $row['id'] ) ? (string) $row['id'] : '';
-		},
-		$page_rows
-	);
-	$existing_map = fashion_brand_theme_matterhorn_existing_map( $page_ids );
+	$status_map = fashion_brand_theme_matterhorn_group_status_map( $page_rows );
 
 	$markup = defined( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER' ) ? (float) MATTERHORN_PRICE_MARKUP_MULTIPLIER : 2.0;
 	$base_url = add_query_arg(
@@ -295,11 +291,12 @@ function fashion_brand_theme_matterhorn_admin_page() {
 				<p class="matterhorn-index-meta">
 					<?php
 					printf(
-						/* translators: 1: datetime, 2: mapped count, 3: unmapped count, 4: total in feed */
-						esc_html__( 'Last built: %1$s — %2$d mapped · %3$d unmapped/skipped · %4$d total in feed', 'fashion-brand-theme' ),
+						/* translators: 1: datetime, 2: group count, 3: unmapped count, 4: unrecognized color count, 5: total in feed */
+						esc_html__( 'Last built: %1$s — %2$d style groups · %3$d unmapped category · %4$d skipped (unrecognized color) · %5$d total in feed', 'fashion-brand-theme' ),
 						esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $index['built_at'] ) ),
 						(int) $index['mapped_count'],
 						(int) $index['unmapped_count'],
+						(int) ( $index['unrecognized_color_count'] ?? 0 ),
 						(int) $index['total_in_feed']
 					);
 					?>
@@ -334,9 +331,10 @@ function fashion_brand_theme_matterhorn_admin_page() {
 				<p class="description" style="flex-basis:100%;margin:0">
 					<?php
 					printf(
-						/* translators: %d: unmapped count */
-						esc_html__( 'Unmapped/skipped in feed (not importable): %d', 'fashion-brand-theme' ),
-						(int) ( $index['unmapped_count'] ?? 0 )
+						/* translators: 1: unmapped count, 2: unrecognized color count */
+						esc_html__( 'Unmapped category (not importable): %1$d · Skipped (unrecognized color): %2$d', 'fashion-brand-theme' ),
+						(int) ( $index['unmapped_count'] ?? 0 ),
+						(int) ( $index['unrecognized_color_count'] ?? 0 )
 					);
 					?>
 				</p>
@@ -378,20 +376,21 @@ function fashion_brand_theme_matterhorn_admin_page() {
 					<?php else : ?>
 						<?php foreach ( $page_rows as $row ) : ?>
 							<?php
-							$mid       = isset( $row['id'] ) ? (string) $row['id'] : '';
-							$on_sale   = ( '1' === (string) ( $row['sale'] ?? '' ) ) && (float) ( $row['sale_price_netto'] ?? 0 ) > 0;
-							$display   = $on_sale
+							$gid         = isset( $row['id'] ) ? (string) $row['id'] : '';
+							$on_sale     = ( '1' === (string) ( $row['sale'] ?? '' ) ) && (float) ( $row['sale_price_netto'] ?? 0 ) > 0;
+							$display     = $on_sale
 								? ( (float) $row['sale_price_netto'] * $markup )
 								: ( (float) ( $row['price_netto'] ?? 0 ) * $markup );
-							$exists    = isset( $existing_map[ $mid ] );
-							$cat_label = isset( $canonical[ $row['category'] ] ) ? $canonical[ $row['category'] ] : $row['category'];
-							$size_text = '';
+							$status      = isset( $status_map[ $gid ] ) ? $status_map[ $gid ] : 'new';
+							$cat_label   = isset( $canonical[ $row['category'] ] ) ? $canonical[ $row['category'] ] : $row['category'];
+							$color_count = isset( $row['color_count'] ) ? (int) $row['color_count'] : 1;
+							$size_text   = '';
 							if ( ! empty( $row['sizes'] ) && is_array( $row['sizes'] ) ) {
 								$names = array();
 								foreach ( $row['sizes'] as $size ) {
 									$names[] = isset( $size['name'] ) ? (string) $size['name'] : '';
 								}
-								$size_text = implode( ', ', array_filter( $names ) );
+								$size_text = implode( ', ', array_filter( array_unique( $names ) ) );
 							}
 							?>
 							<tr>
@@ -399,7 +398,7 @@ function fashion_brand_theme_matterhorn_admin_page() {
 									<input
 										type="checkbox"
 										class="matterhorn-row-check"
-										value="<?php echo esc_attr( $mid ); ?>"
+										value="<?php echo esc_attr( $gid ); ?>"
 										data-category="<?php echo esc_attr( $row['category'] ?? '' ); ?>"
 									>
 								</th>
@@ -411,8 +410,15 @@ function fashion_brand_theme_matterhorn_admin_page() {
 									<?php endif; ?>
 								</td>
 								<td>
-									<strong><?php echo esc_html( $row['name'] ?? '' ); ?></strong><br>
-									<code><?php echo esc_html( $mid ); ?></code>
+									<strong><?php echo esc_html( $row['name'] ?? '' ); ?></strong>
+									<?php if ( $color_count > 1 ) : ?>
+										<span class="matterhorn-badge" style="margin-left:6px"><?php echo esc_html( sprintf( _n( '%d color', '%d colors', $color_count, 'fashion-brand-theme' ), $color_count ) ); ?></span>
+									<?php endif; ?>
+									<br>
+									<code title="<?php echo esc_attr( $gid ); ?>"><?php echo esc_html( $row['style_key'] ?? $gid ); ?></code>
+									<?php if ( ! empty( $row['colors'] ) && is_array( $row['colors'] ) ) : ?>
+										<br><small><?php echo esc_html( implode( ', ', $row['colors'] ) ); ?></small>
+									<?php endif; ?>
 								</td>
 								<td><?php echo esc_html( $cat_label ); ?></td>
 								<td>
@@ -429,8 +435,10 @@ function fashion_brand_theme_matterhorn_admin_page() {
 								</td>
 								<td><?php echo esc_html( $size_text ); ?></td>
 								<td>
-									<?php if ( $exists ) : ?>
+									<?php if ( 'imported' === $status ) : ?>
 										<span class="matterhorn-badge"><?php esc_html_e( 'Already imported', 'fashion-brand-theme' ); ?></span>
+									<?php elseif ( 'partial' === $status ) : ?>
+										<span class="matterhorn-badge" style="background:#fcf0e3;color:#9a5b1a"><?php esc_html_e( 'Partial', 'fashion-brand-theme' ); ?></span>
 									<?php else : ?>
 										<span class="matterhorn-badge matterhorn-badge--new"><?php esc_html_e( 'New', 'fashion-brand-theme' ); ?></span>
 									<?php endif; ?>
