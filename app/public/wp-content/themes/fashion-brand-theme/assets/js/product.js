@@ -56,6 +56,60 @@
 		});
 	}
 
+	function getProductVariations(form) {
+		if (window.jQuery) {
+			var data = window.jQuery(form).data('product_variations');
+			if (Array.isArray(data)) {
+				return data;
+			}
+		}
+		var raw = form.getAttribute('data-product_variations');
+		if (!raw || raw === 'false') {
+			return [];
+		}
+		try {
+			var parsed = JSON.parse(raw);
+			return Array.isArray(parsed) ? parsed : [];
+		} catch (err) {
+			return [];
+		}
+	}
+
+	function readChosenAttributes(form) {
+		var chosen = {};
+		form.querySelectorAll('table.variations select').forEach(function (select) {
+			chosen[select.name] = select.value || '';
+		});
+		return chosen;
+	}
+
+	function findVariationImage(variations, chosen) {
+		var candidates = variations.filter(function (variation) {
+			if (!variation || !variation.attributes) {
+				return false;
+			}
+			for (var key in chosen) {
+				if (!Object.prototype.hasOwnProperty.call(chosen, key)) {
+					continue;
+				}
+				if (!chosen[key]) {
+					continue;
+				}
+				if (String(variation.attributes[key] || '') !== String(chosen[key])) {
+					return false;
+				}
+			}
+			return true;
+		});
+
+		for (var i = 0; i < candidates.length; i++) {
+			if (candidates[i].image && candidates[i].image.src) {
+				return candidates[i].image;
+			}
+		}
+		return null;
+	}
+
 	function initVariationGallery() {
 		var form = document.querySelector('form.variations_form');
 		if (!form || !window.jQuery) {
@@ -72,6 +126,32 @@
 
 		var defaultSrc = main.getAttribute('src') || '';
 		var defaultSrcset = main.getAttribute('srcset') || '';
+		var variations = getProductVariations(form);
+
+		function applyGalleryForCurrentSelection() {
+			var chosen = readChosenAttributes(form);
+			var anySelected = Object.keys(chosen).some(function (key) {
+				return !!chosen[key];
+			});
+
+			if (!anySelected) {
+				if (defaultSrc) {
+					setMainImage(main, defaultSrc, defaultSrcset);
+					if (galleryRoot) {
+						syncThumbActive(galleryRoot, defaultSrc);
+					}
+				}
+				return;
+			}
+
+			var image = findVariationImage(variations, chosen);
+			if (image && image.src) {
+				setMainImage(main, image.src, image.srcset || '');
+				if (galleryRoot) {
+					syncThumbActive(galleryRoot, image.src);
+				}
+			}
+		}
 
 		window.jQuery(form).on('found_variation', function (event, variation) {
 			if (!variation || !variation.image || !variation.image.src) {
@@ -83,14 +163,15 @@
 			}
 		});
 
+		// WooCommerce fires reset_data when the selection is incomplete (e.g. color
+		// chosen but size not). Do not snap back to the default image in that case —
+		// update from any variation that matches the currently chosen attributes.
 		window.jQuery(form).on('reset_data', function () {
-			if (!defaultSrc) {
-				return;
-			}
-			setMainImage(main, defaultSrc, defaultSrcset);
-			if (galleryRoot) {
-				syncThumbActive(galleryRoot, defaultSrc);
-			}
+			applyGalleryForCurrentSelection();
+		});
+
+		window.jQuery(form).on('change', 'table.variations select', function () {
+			applyGalleryForCurrentSelection();
 		});
 	}
 

@@ -175,14 +175,60 @@ function fashion_brand_theme_get_product_card_image_ids( $product ) {
 }
 
 /**
- * Ordered gallery IDs for the single product page: worn → primary → hover.
+ * Ordered gallery IDs for the single product page.
  *
- * Seeded gallery order is [hover, worn]; featured is primary.
+ * Simple products keep worn → primary → hover (max 3).
+ * Variable products: parent featured image first, then one
+ * representative image per color variation (uncapped).
  *
  * @param WC_Product $product Product.
  * @return int[]
  */
 function fashion_brand_theme_get_product_page_gallery_ids( $product ) {
+	if ( $product->is_type( 'variable' ) ) {
+		$ordered    = array();
+		$seen       = array();
+		$seen_color = array();
+
+		$primary = (int) $product->get_image_id();
+		if ( $primary > 0 ) {
+			$ordered[]        = $primary;
+			$seen[ $primary ] = true;
+		}
+
+		foreach ( $product->get_children() as $child_id ) {
+			$variation = wc_get_product( $child_id );
+			if ( ! $variation || ! $variation->exists() ) {
+				continue;
+			}
+
+			$image_id = (int) $variation->get_image_id();
+			if ( $image_id <= 0 || isset( $seen[ $image_id ] ) ) {
+				continue;
+			}
+
+			$attrs = $variation->get_attributes();
+			$color = '';
+			if ( isset( $attrs['pa_color'] ) ) {
+				$color = (string) $attrs['pa_color'];
+			} elseif ( isset( $attrs['attribute_pa_color'] ) ) {
+				$color = (string) $attrs['attribute_pa_color'];
+			}
+
+			// One representative image per color; if no color attr, still include once.
+			$color_key = '' !== $color ? $color : 'variation-' . (int) $child_id;
+			if ( isset( $seen_color[ $color_key ] ) ) {
+				continue;
+			}
+			$seen_color[ $color_key ] = true;
+
+			$ordered[]         = $image_id;
+			$seen[ $image_id ] = true;
+		}
+
+		return array_values( $ordered );
+	}
+
 	$primary = (int) $product->get_image_id();
 	$gallery = array_map( 'intval', $product->get_gallery_image_ids() );
 	$hover   = $gallery[0] ?? 0;
