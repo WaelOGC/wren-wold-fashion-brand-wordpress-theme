@@ -230,7 +230,18 @@ function fashion_brand_theme_matterhorn_feed_path() {
 		wp_mkdir_p( $dir );
 	}
 
-	return trailingslashit( $dir ) . 'feed-woocommerce.xml';
+	$canonical = trailingslashit( $dir ) . 'feed-woocommerce.xml';
+	$typo      = trailingslashit( $dir ) . 'feed-woocomerce.xml';
+
+	if ( file_exists( $canonical ) ) {
+		return $canonical;
+	}
+
+	if ( file_exists( $typo ) ) {
+		return $typo;
+	}
+
+	return $canonical;
 }
 
 /**
@@ -654,6 +665,155 @@ function fashion_brand_theme_matterhorn_extract_style_and_color( $code ) {
  */
 function fashion_brand_theme_matterhorn_group_key( $producer, $style_key ) {
 	return mb_strtolower( trim( (string) $producer ), 'UTF-8' ) . '|' . (string) $style_key;
+}
+
+/**
+ * Normalized first-sentence description key for secondary grouping.
+ *
+ * Matching only — never displayed. Empty string means "ignore this signal".
+ *
+ * @param string $html Raw feed <description> HTML.
+ * @return string Lowercase key, or '' if too short / unusable.
+ */
+function fashion_brand_theme_matterhorn_description_key( $html ) {
+	$text = wp_strip_all_tags( html_entity_decode( (string) $html, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+	$text = preg_replace( '/\s+/u', ' ', $text );
+	$text = trim( (string) $text );
+
+	if ( '' === $text ) {
+		return '';
+	}
+
+	$dot = mb_strpos( $text, '.', 0, 'UTF-8' );
+	if ( false !== $dot ) {
+		$sentence = trim( mb_substr( $text, 0, $dot + 1, 'UTF-8' ) );
+	} else {
+		$sentence = $text;
+	}
+
+	$key = mb_strtolower( $sentence, 'UTF-8' );
+
+	if ( mb_strlen( $key, 'UTF-8' ) < 15 ) {
+		return '';
+	}
+
+	return $key;
+}
+
+/**
+ * Whether two variant lists share any color label (case-insensitive).
+ *
+ * @param array<int, array<string, mixed>> $variants_a Variants.
+ * @param array<int, array<string, mixed>> $variants_b Variants.
+ * @return bool
+ */
+function fashion_brand_theme_matterhorn_variants_color_overlap( array $variants_a, array $variants_b ) {
+	$seen = array();
+
+	foreach ( $variants_a as $variant ) {
+		$color = mb_strtolower( trim( (string) ( $variant['color'] ?? '' ) ), 'UTF-8' );
+		if ( '' !== $color ) {
+			$seen[ $color ] = true;
+		}
+	}
+
+	foreach ( $variants_b as $variant ) {
+		$color = mb_strtolower( trim( (string) ( $variant['color'] ?? '' ) ), 'UTF-8' );
+		if ( '' !== $color && isset( $seen[ $color ] ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Second-pass merge: union code-based groups that share producer + desc_key,
+ * unless the merge would duplicate a color label.
+ *
+ * @param array<string, array<string, mixed>> $groups Code-keyed groups from pass 1.
+ * @return array<int, array<string, mixed>> Merged group list (re-keyed 0..n).
+ */
+function fashion_brand_theme_matterhorn_merge_groups_by_description( array $groups ) {
+	if ( empty( $groups ) ) {
+		return array();
+	}
+
+	// Preserve insertion order with stable list indices.
+	$list = array_values( $groups );
+	$n    = count( $list );
+
+	$parent = range( 0, $n - 1 );
+
+	$find = static function ( $i ) use ( &$parent, &$find ) {
+		while ( $parent[ $i ] !== $i ) {
+			$parent[ $i ] = $parent[ $parent[ $i ] ];
+			$i            = $parent[ $i ];
+		}
+		return $i;
+	};
+
+	$buckets = array();
+	foreach ( $list as $i => $group ) {
+		$desc = isset( $group['desc_key'] ) ? (string) $group['desc_key'] : '';
+		if ( '' === $desc ) {
+			continue;
+		}
+		$producer = mb_strtolower( trim( (string) ( $group['producer'] ?? '' ) ), 'UTF-8' );
+		$bucket   = $producer . "\0" . $desc;
+		$buckets[ $bucket ][] = $i;
+	}
+
+	foreach ( $buckets as $indices ) {
+		if ( count( $indices ) < 2 ) {
+			continue;
+		}
+
+		// Greedy cluster within the bucket: only union when colors don't collide
+		// across the current components (protects against boilerplate descriptions).
+		$cluster_count = count( $indices );
+		for ( $a = 0; $a < $cluster_count; $a++ ) {
+			$ia = $find( $indices[ $a ] );
+			for ( $b = $a + 1; $b < $cluster_count; $b++ ) {
+				$ib = $find( $indices[ $b ] );
+				if ( $ia === $ib ) {
+					continue;
+				}
+
+				if ( fashion_brand_theme_matterhorn_variants_color_overlap(
+					$list[ $ia ]['variants'],
+					$list[ $ib ]['variants']
+				) ) {
+					continue;
+				}
+
+				// Union: attach higher index root under lower for stable ids.
+				if ( $ia < $ib ) {
+					$parent[ $ib ] = $ia;
+					$list[ $ia ]['variants'] = array_merge( $list[ $ia ]['variants'], $list[ $ib ]['variants'] );
+					$list[ $ib ]['variants'] = array();
+				} else {
+					$parent[ $ia ] = $ib;
+					$list[ $ib ]['variants'] = array_merge( $list[ $ib ]['variants'], $list[ $ia ]['variants'] );
+					$list[ $ia ]['variants'] = array();
+					$ia = $ib;
+				}
+			}
+		}
+	}
+
+	$merged = array();
+	foreach ( $list as $i => $group ) {
+		if ( $find( $i ) !== $i ) {
+			continue;
+		}
+		if ( empty( $group['variants'] ) ) {
+			continue;
+		}
+		$merged[] = $group;
+	}
+
+	return $merged;
 }
 
 /**
@@ -1562,6 +1722,7 @@ function fashion_brand_theme_matterhorn_build_index() {
 		}
 
 		$group_key = fashion_brand_theme_matterhorn_group_key( $data['producer'], $extracted['style_key'] );
+		$desc_key  = fashion_brand_theme_matterhorn_description_key( $data['description'] ?? '' );
 
 		$size_labels = array();
 		foreach ( $data['sizes'] as $size ) {
@@ -1589,12 +1750,16 @@ function fashion_brand_theme_matterhorn_build_index() {
 
 		if ( ! isset( $groups[ $group_key ] ) ) {
 			$groups[ $group_key ] = array(
-				'id'         => $group_key,
-				'style_key'  => $extracted['style_key'],
-				'producer'   => (string) $data['producer'],
-				'category'   => $category_slug,
-				'variants'   => array(),
+				'id'        => $group_key,
+				'style_key' => $extracted['style_key'],
+				'producer'  => (string) $data['producer'],
+				'category'  => $category_slug,
+				'desc_key'  => $desc_key,
+				'variants'  => array(),
 			);
+		} elseif ( '' === (string) ( $groups[ $group_key ]['desc_key'] ?? '' ) && '' !== $desc_key ) {
+			// Prefer a usable desc_key if the first member lacked one.
+			$groups[ $group_key ]['desc_key'] = $desc_key;
 		}
 
 		$groups[ $group_key ]['variants'][] = $variant;
@@ -1604,10 +1769,17 @@ function fashion_brand_theme_matterhorn_build_index() {
 
 	$reader->close();
 
+	// Pass 2: union code-based groups that share producer + description key.
+	$groups = fashion_brand_theme_matterhorn_merge_groups_by_description( $groups );
+
 	$products = array();
 
 	foreach ( $groups as $group ) {
-		$variants    = $group['variants'];
+		$variants = isset( $group['variants'] ) && is_array( $group['variants'] ) ? $group['variants'] : array();
+		if ( empty( $variants ) ) {
+			continue;
+		}
+
 		$color_count = count( $variants );
 		$is_variable = $color_count > 1;
 
@@ -1622,6 +1794,9 @@ function fashion_brand_theme_matterhorn_build_index() {
 
 		$first = $variants[0];
 
+		// style_key may differ across description-merged variants — keep the
+		// representative from the surviving root group (pass-1 primary), which
+		// is already on $group['style_key']. Do not require them to match.
 		$products[] = array(
 			'id'               => $group['id'],
 			'type'             => $is_variable ? 'variable' : 'simple',
