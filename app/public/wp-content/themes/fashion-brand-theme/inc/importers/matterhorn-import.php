@@ -1,9 +1,9 @@
 <?php
 /**
- * Matterhorn WooCommerce XML importer (WP-CLI only).
+ * Matterhorn WooCommerce XML importer — shared library + optional WP-CLI command.
  *
- * USAGE
- * -----
+ * USAGE (WP-CLI)
+ * --------------
  * 1. Upload the feed via SFTP / File Manager to:
  *    wp-content/uploads/matterhorn/feed-woocommerce.xml
  *    (Do not commit the XML into the theme repo — it is data, not code.)
@@ -17,6 +17,9 @@
  * Optional:
  *    wp matterhorn import --offset=100 --limit=50
  *
+ * Day-to-day imports can also be done from wp-admin → Products → Import from Matterhorn
+ * (see inc/admin/matterhorn-admin.php).
+ *
  * @package Fashion_Brand_Theme
  */
 
@@ -24,209 +27,185 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
-	return;
-}
-
 /**
  * TODO: set real markup before running import.
  * Wholesale (price_netto / sale_price_netto) is multiplied by this constant
  * to produce storefront regular_price / sale_price. Default 1 = no markup.
  */
-define( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER', 2 );
+if ( ! defined( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER' ) ) {
+	define( 'MATTERHORN_PRICE_MARKUP_MULTIPLIER', 2 );
+}
 
-/**
- * WP-CLI command group: wp matterhorn …
- */
-class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 	/**
-	 * Import / update products from the Matterhorn WooCommerce XML feed.
-	 *
-	 * ## OPTIONS
-	 *
-	 * [--limit=<n>]
-	 * : Process at most N products (for test batches).
-	 *
-	 * [--offset=<n>]
-	 * : Skip the first N products in the feed before importing.
-	 *
-	 * ## EXAMPLES
-	 *
-	 *     wp matterhorn import --limit=20
-	 *     wp matterhorn import
-	 *
-	 * @param array $args       Positional args.
-	 * @param array $assoc_args Associative flags.
-	 * @return void
+	 * WP-CLI command group: wp matterhorn …
 	 */
-	public function import( $args, $assoc_args ) {
-		if ( ! class_exists( 'WooCommerce' ) ) {
-			WP_CLI::error( 'WooCommerce is not active.' );
-		}
+	class Fashion_Brand_Theme_Matterhorn_CLI extends WP_CLI_Command {
 
-		$limit  = isset( $assoc_args['limit'] ) ? max( 0, (int) $assoc_args['limit'] ) : 0;
-		$offset = isset( $assoc_args['offset'] ) ? max( 0, (int) $assoc_args['offset'] ) : 0;
+		/**
+		 * Import / update products from the Matterhorn WooCommerce XML feed.
+		 *
+		 * ## OPTIONS
+		 *
+		 * [--limit=<n>]
+		 * : Process at most N products (for test batches).
+		 *
+		 * [--offset=<n>]
+		 * : Skip the first N products in the feed before importing.
+		 *
+		 * ## EXAMPLES
+		 *
+		 *     wp matterhorn import --limit=20
+		 *     wp matterhorn import
+		 *
+		 * @param array $args       Positional args.
+		 * @param array $assoc_args Associative flags.
+		 * @return void
+		 */
+		public function import( $args, $assoc_args ) {
+			if ( ! class_exists( 'WooCommerce' ) ) {
+				WP_CLI::error( 'WooCommerce is not active.' );
+			}
 
-		$feed = fashion_brand_theme_matterhorn_feed_path();
+			$limit  = isset( $assoc_args['limit'] ) ? max( 0, (int) $assoc_args['limit'] ) : 0;
+			$offset = isset( $assoc_args['offset'] ) ? max( 0, (int) $assoc_args['offset'] ) : 0;
 
-		if ( ! file_exists( $feed ) ) {
-			WP_CLI::error(
+			$feed = fashion_brand_theme_matterhorn_feed_path();
+
+			if ( ! file_exists( $feed ) ) {
+				WP_CLI::error(
+					sprintf(
+						'Feed not found at %s. Upload feed-woocommerce.xml there first.',
+						$feed
+					)
+				);
+			}
+
+			fashion_brand_theme_matterhorn_bootstrap_import();
+
+			$total            = fashion_brand_theme_matterhorn_count_products( $feed );
+			$imported         = 0;
+			$updated          = 0;
+			$skipped_unmapped = 0;
+			$skipped_other    = 0;
+			$errors           = 0;
+			$seen             = 0;
+
+			WP_CLI::log(
 				sprintf(
-					'Feed not found at %s. Upload feed-woocommerce.xml there first.',
-					$feed
+					'Starting Matterhorn import (total in feed: %d, offset: %d, limit: %s, markup: %sx).',
+					$total,
+					$offset,
+					$limit > 0 ? (string) $limit : 'none',
+					(string) MATTERHORN_PRICE_MARKUP_MULTIPLIER
+				)
+			);
+
+			$reader = new XMLReader();
+
+			if ( ! $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
+				WP_CLI::error( 'Could not open feed with XMLReader.' );
+			}
+
+			while ( $reader->read() ) {
+				if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
+					continue;
+				}
+
+				$node_xml = $reader->readOuterXML();
+
+				if ( '' === $node_xml ) {
+					continue;
+				}
+
+				++$seen;
+
+				if ( $seen <= $offset ) {
+					continue;
+				}
+
+				$processed = $imported + $updated + $skipped_unmapped + $skipped_other + $errors;
+
+				if ( $limit > 0 && $processed >= $limit ) {
+					break;
+				}
+
+				$product_data = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
+				$result       = fashion_brand_theme_matterhorn_import_parsed_product( $product_data );
+
+				switch ( $result['status'] ) {
+					case 'created':
+						++$imported;
+						WP_CLI::log(
+							sprintf(
+								'Imported %d / %d — created #%s (%s) [%s → %s]',
+								$imported + $updated + $offset,
+								$total,
+								$result['product_id'],
+								$result['sku'],
+								$result['type'],
+								$result['category']
+							)
+						);
+						break;
+					case 'updated':
+						++$updated;
+						WP_CLI::log(
+							sprintf(
+								'Imported %d / %d — updated #%s (%s) [%s → %s]',
+								$imported + $updated + $offset,
+								$total,
+								$result['product_id'],
+								$result['sku'],
+								$result['type'],
+								$result['category']
+							)
+						);
+						break;
+					case 'skipped_unmapped':
+						++$skipped_unmapped;
+						WP_CLI::log(
+							sprintf(
+								'Skipped #%s — category not mapped (%s).',
+								$result['product_id'],
+								$result['message']
+							)
+						);
+						break;
+					case 'skipped_other':
+						++$skipped_other;
+						WP_CLI::warning( $result['message'] );
+						break;
+					default:
+						++$errors;
+						WP_CLI::warning( $result['message'] );
+						break;
+				}
+
+				unset( $node_xml, $product_data, $result );
+				if ( 0 === ( ( $imported + $updated ) % 25 ) ) {
+					wp_cache_flush();
+				}
+			}
+
+			$reader->close();
+
+			WP_CLI::success(
+				sprintf(
+					'Done. Imported %d, updated %d, skipped (unmapped category) %d, skipped (other) %d, errors %d.',
+					$imported,
+					$updated,
+					$skipped_unmapped,
+					$skipped_other,
+					$errors
 				)
 			);
 		}
-
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/media.php';
-		require_once ABSPATH . 'wp-admin/includes/image.php';
-
-		if ( function_exists( 'fashion_brand_theme_ensure_product_attributes' ) ) {
-			fashion_brand_theme_ensure_product_attributes();
-		}
-
-		fashion_brand_theme_matterhorn_ensure_brand_attribute();
-
-		$total             = fashion_brand_theme_matterhorn_count_products( $feed );
-		$imported          = 0; // Newly created products.
-		$updated           = 0;
-		$skipped_unmapped  = 0;
-		$skipped_other     = 0;
-		$errors            = 0;
-		$seen              = 0;
-
-		WP_CLI::log(
-			sprintf(
-				'Starting Matterhorn import (total in feed: %d, offset: %d, limit: %s, markup: %sx).',
-				$total,
-				$offset,
-				$limit > 0 ? (string) $limit : 'none',
-				(string) MATTERHORN_PRICE_MARKUP_MULTIPLIER
-			)
-		);
-
-		$reader = new XMLReader();
-
-		if ( ! $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
-			WP_CLI::error( 'Could not open feed with XMLReader.' );
-		}
-
-		while ( $reader->read() ) {
-			if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
-				continue;
-			}
-
-			$node_xml = $reader->readOuterXML();
-
-			if ( '' === $node_xml ) {
-				continue;
-			}
-
-			++$seen;
-
-			if ( $seen <= $offset ) {
-				continue;
-			}
-
-			$processed = $imported + $updated + $skipped_unmapped + $skipped_other + $errors;
-
-			if ( $limit > 0 && $processed >= $limit ) {
-				break;
-			}
-
-			$product_data = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
-
-			if ( empty( $product_data['product_id'] ) ) {
-				++$skipped_other;
-				WP_CLI::warning( sprintf( 'Skipped product at position %d — missing product_id.', $seen ) );
-				continue;
-			}
-
-			$category_slug = fashion_brand_theme_matterhorn_map_category_slug( $product_data['category'] );
-
-			if ( null === $category_slug ) {
-				++$skipped_unmapped;
-				WP_CLI::log(
-					sprintf(
-						'Skipped #%s — category not mapped (%s).',
-						$product_data['product_id'],
-						fashion_brand_theme_matterhorn_strip_category_prefix( $product_data['category'] )
-					)
-				);
-				continue;
-			}
-
-			$cat_term = get_term_by( 'slug', $category_slug, 'product_cat' );
-
-			if ( ! $cat_term || is_wp_error( $cat_term ) ) {
-				++$skipped_other;
-				WP_CLI::warning(
-					sprintf(
-						'Skipped #%s — product_cat slug "%s" does not exist. Create the canonical category first.',
-						$product_data['product_id'],
-						$category_slug
-					)
-				);
-				continue;
-			}
-
-			try {
-				$result = fashion_brand_theme_matterhorn_upsert_product( $product_data, (int) $cat_term->term_id );
-
-				if ( 'created' === $result['action'] ) {
-					++$imported;
-				} else {
-					++$updated;
-				}
-
-				WP_CLI::log(
-					sprintf(
-						'Imported %d / %d — %s #%s (%s) [%s → %s]',
-						$imported + $updated + $offset,
-						$total,
-						$result['action'],
-						$product_data['product_id'],
-						$result['sku'],
-						$result['type'],
-						$category_slug
-					)
-				);
-			} catch ( Exception $e ) {
-				++$errors;
-				WP_CLI::warning(
-					sprintf(
-						'Error on product_id %s: %s',
-						$product_data['product_id'],
-						$e->getMessage()
-					)
-				);
-			}
-
-			// Free memory between products.
-			unset( $node_xml, $product_data, $result );
-			if ( 0 === ( ( $imported + $updated ) % 25 ) ) {
-				wp_cache_flush();
-			}
-		}
-
-		$reader->close();
-
-		WP_CLI::success(
-			sprintf(
-				'Done. Imported %d, updated %d, skipped (unmapped category) %d, skipped (other) %d, errors %d.',
-				$imported,
-				$updated,
-				$skipped_unmapped,
-				$skipped_other,
-				$errors
-			)
-		);
 	}
-}
 
-WP_CLI::add_command( 'matterhorn', 'Fashion_Brand_Theme_Matterhorn_CLI' );
+	WP_CLI::add_command( 'matterhorn', 'Fashion_Brand_Theme_Matterhorn_CLI' );
+}
 
 /**
  * Absolute path to the Matterhorn feed file.
@@ -242,6 +221,39 @@ function fashion_brand_theme_matterhorn_feed_path() {
 	}
 
 	return trailingslashit( $dir ) . 'feed-woocommerce.xml';
+}
+
+/**
+ * Absolute path to the Matterhorn JSON index file.
+ *
+ * @return string
+ */
+function fashion_brand_theme_matterhorn_index_path() {
+	$uploads = wp_upload_dir();
+	$dir     = trailingslashit( $uploads['basedir'] ) . 'matterhorn';
+
+	if ( ! is_dir( $dir ) ) {
+		wp_mkdir_p( $dir );
+	}
+
+	return trailingslashit( $dir ) . 'index.json';
+}
+
+/**
+ * Load admin media helpers + product attributes needed before import.
+ *
+ * @return void
+ */
+function fashion_brand_theme_matterhorn_bootstrap_import() {
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+
+	if ( function_exists( 'fashion_brand_theme_ensure_product_attributes' ) ) {
+		fashion_brand_theme_ensure_product_attributes();
+	}
+
+	fashion_brand_theme_matterhorn_ensure_brand_attribute();
 }
 
 /**
@@ -566,7 +578,9 @@ function fashion_brand_theme_matterhorn_sideload_image( $url, $product_id ) {
 	$attachment_id = media_sideload_image( $url, $product_id, null, 'id' );
 
 	if ( is_wp_error( $attachment_id ) ) {
-		WP_CLI::warning( sprintf( 'Image sideload failed (%s): %s', $url, $attachment_id->get_error_message() ) );
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			WP_CLI::warning( sprintf( 'Image sideload failed (%s): %s', $url, $attachment_id->get_error_message() ) );
+		}
 		return 0;
 	}
 
@@ -845,3 +859,365 @@ function fashion_brand_theme_matterhorn_sync_variations( WC_Product_Variable $pr
 
 	WC_Product_Variable::sync( $parent_id );
 }
+
+/**
+ * Shared single-product import entry point (CLI + admin AJAX).
+ *
+ * @param array<string, mixed> $product_data Parsed product node.
+ * @return array<string, mixed>
+ */
+function fashion_brand_theme_matterhorn_import_parsed_product( array $product_data ) {
+	$product_id = isset( $product_data['product_id'] ) ? (string) $product_data['product_id'] : '';
+
+	if ( '' === $product_id ) {
+		return array(
+			'status'     => 'skipped_other',
+			'product_id' => '',
+			'message'    => 'Missing product_id.',
+		);
+	}
+
+	$category_slug = fashion_brand_theme_matterhorn_map_category_slug( $product_data['category'] ?? '' );
+
+	if ( null === $category_slug ) {
+		return array(
+			'status'     => 'skipped_unmapped',
+			'product_id' => $product_id,
+			'message'    => fashion_brand_theme_matterhorn_strip_category_prefix( $product_data['category'] ?? '' ),
+		);
+	}
+
+	$cat_term = get_term_by( 'slug', $category_slug, 'product_cat' );
+
+	if ( ! $cat_term || is_wp_error( $cat_term ) ) {
+		return array(
+			'status'     => 'skipped_other',
+			'product_id' => $product_id,
+			'message'    => sprintf(
+				'Skipped #%s — product_cat slug "%s" does not exist. Create the canonical category first.',
+				$product_id,
+				$category_slug
+			),
+		);
+	}
+
+	try {
+		$result = fashion_brand_theme_matterhorn_upsert_product( $product_data, (int) $cat_term->term_id );
+
+		return array(
+			'status'     => $result['action'], // created | updated
+			'product_id' => $product_id,
+			'sku'        => $result['sku'],
+			'type'       => $result['type'],
+			'category'   => $category_slug,
+			'wc_id'      => $result['id'],
+			'message'    => '',
+		);
+	} catch ( Exception $e ) {
+		return array(
+			'status'     => 'error',
+			'product_id' => $product_id,
+			'message'    => sprintf( 'Error on product_id %s: %s', $product_id, $e->getMessage() ),
+		);
+	}
+}
+
+/**
+ * Build lightweight index.json from the XML feed (metadata only).
+ *
+ * @return array<string, mixed>|WP_Error Index payload on success.
+ */
+function fashion_brand_theme_matterhorn_build_index() {
+	@set_time_limit( 0 );
+
+	$feed = fashion_brand_theme_matterhorn_feed_path();
+
+	if ( ! file_exists( $feed ) ) {
+		return new WP_Error(
+			'matterhorn_feed_missing',
+			sprintf( 'Feed not found at %s.', $feed )
+		);
+	}
+
+	$reader = new XMLReader();
+
+	if ( ! $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
+		return new WP_Error( 'matterhorn_feed_unreadable', 'Could not open feed with XMLReader.' );
+	}
+
+	$products        = array();
+	$total_in_feed   = 0;
+	$unmapped_count  = 0;
+
+	while ( $reader->read() ) {
+		if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
+			continue;
+		}
+
+		$node_xml = $reader->readOuterXML();
+
+		if ( '' === $node_xml ) {
+			continue;
+		}
+
+		++$total_in_feed;
+
+		$data = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
+
+		if ( empty( $data['product_id'] ) ) {
+			continue;
+		}
+
+		$category_slug = fashion_brand_theme_matterhorn_map_category_slug( $data['category'] );
+
+		if ( null === $category_slug ) {
+			++$unmapped_count;
+			continue;
+		}
+
+		$size_labels = array();
+		foreach ( $data['sizes'] as $size ) {
+			$name = isset( $size['name'] ) ? trim( (string) $size['name'] ) : '';
+			if ( '' === $name ) {
+				continue;
+			}
+			$size_labels[] = array(
+				'name'  => $name,
+				'count' => isset( $size['count'] ) ? (int) $size['count'] : 0,
+			);
+		}
+
+		$products[] = array(
+			'id'               => (string) $data['product_id'],
+			'name'             => (string) $data['name'],
+			'category'         => $category_slug,
+			'price_netto'      => (float) $data['price_netto'],
+			'sale'             => (string) $data['sale'],
+			'sale_price_netto' => (float) $data['sale_price_netto'],
+			'photo'            => ! empty( $data['photos'][0] ) ? (string) $data['photos'][0] : '',
+			'sizes'            => $size_labels,
+		);
+
+		unset( $node_xml, $data );
+	}
+
+	$reader->close();
+
+	$index = array(
+		'built_at'       => time(),
+		'total_in_feed'  => $total_in_feed,
+		'mapped_count'   => count( $products ),
+		'unmapped_count' => $unmapped_count,
+		'markup'         => (float) MATTERHORN_PRICE_MARKUP_MULTIPLIER,
+		'products'       => $products,
+	);
+
+	$written = file_put_contents(
+		fashion_brand_theme_matterhorn_index_path(),
+		wp_json_encode( $index )
+	);
+
+	if ( false === $written ) {
+		return new WP_Error( 'matterhorn_index_write_failed', 'Could not write index.json.' );
+	}
+
+	return $index;
+}
+
+/**
+ * Load index.json if present.
+ *
+ * @return array<string, mixed>|null
+ */
+function fashion_brand_theme_matterhorn_load_index() {
+	$path = fashion_brand_theme_matterhorn_index_path();
+
+	if ( ! file_exists( $path ) ) {
+		return null;
+	}
+
+	$raw = file_get_contents( $path );
+
+	if ( false === $raw || '' === $raw ) {
+		return null;
+	}
+
+	$data = json_decode( $raw, true );
+
+	return is_array( $data ) ? $data : null;
+}
+
+/**
+ * Import a batch of Matterhorn product IDs by streaming the XML once.
+ *
+ * @param array<int, string> $product_ids Matterhorn product_id values.
+ * @return array{results:array<int,array>,summary:array<string,int>}
+ */
+function fashion_brand_theme_matterhorn_import_product_ids( array $product_ids ) {
+	$wanted = array();
+	foreach ( $product_ids as $id ) {
+		$id = (string) $id;
+		if ( '' !== $id ) {
+			$wanted[ $id ] = true;
+		}
+	}
+
+	$summary = array(
+		'created'          => 0,
+		'updated'          => 0,
+		'skipped_unmapped' => 0,
+		'skipped_other'    => 0,
+		'errors'           => 0,
+		'not_found'        => 0,
+	);
+	$results = array();
+
+	if ( empty( $wanted ) ) {
+		return array(
+			'results' => $results,
+			'summary' => $summary,
+		);
+	}
+
+	fashion_brand_theme_matterhorn_bootstrap_import();
+
+	$feed = fashion_brand_theme_matterhorn_feed_path();
+
+	if ( ! file_exists( $feed ) ) {
+		$summary['errors'] = count( $wanted );
+		return array(
+			'results' => array(
+				array(
+					'status'     => 'error',
+					'product_id' => '',
+					'message'    => 'Feed file missing.',
+				),
+			),
+			'summary' => $summary,
+		);
+	}
+
+	$remaining = $wanted;
+	$reader    = new XMLReader();
+
+	if ( ! $reader->open( $feed, null, LIBXML_NONET | LIBXML_COMPACT ) ) {
+		$summary['errors'] = count( $wanted );
+		return array(
+			'results' => array(
+				array(
+					'status'     => 'error',
+					'product_id' => '',
+					'message'    => 'Could not open feed.',
+				),
+			),
+			'summary' => $summary,
+		);
+	}
+
+	while ( $reader->read() && ! empty( $remaining ) ) {
+		if ( XMLReader::ELEMENT !== $reader->nodeType || 'product' !== $reader->localName ) {
+			continue;
+		}
+
+		$attrs = array();
+		if ( $reader->hasAttributes ) {
+			while ( $reader->moveToNextAttribute() ) {
+				$attrs[ $reader->name ] = $reader->value;
+			}
+			$reader->moveToElement();
+		}
+
+		$pid = isset( $attrs['product_id'] ) ? (string) $attrs['product_id'] : '';
+
+		if ( '' === $pid || ! isset( $remaining[ $pid ] ) ) {
+			continue;
+		}
+
+		$node_xml = $reader->readOuterXML();
+		$data     = fashion_brand_theme_matterhorn_parse_product_node( $node_xml );
+		$result   = fashion_brand_theme_matterhorn_import_parsed_product( $data );
+
+		$results[] = $result;
+		unset( $remaining[ $pid ] );
+
+		switch ( $result['status'] ) {
+			case 'created':
+				++$summary['created'];
+				break;
+			case 'updated':
+				++$summary['updated'];
+				break;
+			case 'skipped_unmapped':
+				++$summary['skipped_unmapped'];
+				break;
+			case 'skipped_other':
+				++$summary['skipped_other'];
+				break;
+			default:
+				++$summary['errors'];
+				break;
+		}
+
+		unset( $node_xml, $data );
+	}
+
+	$reader->close();
+
+	foreach ( array_keys( $remaining ) as $missing_id ) {
+		++$summary['not_found'];
+		$results[] = array(
+			'status'     => 'skipped_other',
+			'product_id' => $missing_id,
+			'message'    => sprintf( 'Product #%s not found in feed.', $missing_id ),
+		);
+	}
+
+	return array(
+		'results' => $results,
+		'summary' => $summary,
+	);
+}
+
+/**
+ * Which of the given Matterhorn IDs already exist as WooCommerce products.
+ *
+ * @param array<int, string> $product_ids IDs to check.
+ * @return array<string, int> Map of matterhorn_id => WC product ID.
+ */
+function fashion_brand_theme_matterhorn_existing_map( array $product_ids ) {
+	$product_ids = array_values( array_filter( array_map( 'strval', $product_ids ) ) );
+	$map         = array();
+
+	if ( empty( $product_ids ) ) {
+		return $map;
+	}
+
+	$query = new WP_Query(
+		array(
+			'post_type'              => 'product',
+			'post_status'            => 'any',
+			'posts_per_page'         => count( $product_ids ),
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => true,
+			'update_post_term_cache' => false,
+			'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_matterhorn_product_id',
+					'value'   => $product_ids,
+					'compare' => 'IN',
+				),
+			),
+		)
+	);
+
+	foreach ( $query->posts as $post_id ) {
+		$mid = get_post_meta( $post_id, '_matterhorn_product_id', true );
+		if ( '' !== (string) $mid ) {
+			$map[ (string) $mid ] = (int) $post_id;
+		}
+	}
+
+	return $map;
+}
+
