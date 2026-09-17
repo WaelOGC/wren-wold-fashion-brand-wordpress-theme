@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function fashion_brand_theme_color_swatch_map() {
 	return array(
+		// Original brand palette.
 		'ecru'       => '#E8E0D4',
 		'oatmeal'    => '#D4C4A8',
 		'sage'       => '#8A9A7B',
@@ -24,7 +25,175 @@ function fashion_brand_theme_color_swatch_map() {
 		'clay-taupe' => '#A8907A',
 		'ink'        => '#15181A',
 		'stone'      => '#B8B3A9',
+		// Matterhorn / feed colors (sanitize_title slugs).
+		'black'       => '#000000',
+		'white'       => '#FFFFFF',
+		'beige'       => '#D8C9A3',
+		'grey'        => '#9B9B93',
+		'gray'        => '#9B9B93',
+		'brown'       => '#6B4A34',
+		'green'       => '#4B7355',
+		'navy'        => '#1F2A44',
+		'bordo'       => '#6E1F2A',
+		'red'         => '#B33A3A',
+		'yellow'      => '#E8C547',
+		'fuksja'      => '#C2185B',
+		'camel'       => '#C19A6B',
+		'mint'        => '#A8D5BA',
+		'khaki'       => '#8B8763',
+		'violet'      => '#6A4C93',
+		'orange'      => '#D97B29',
+		'oliwka'      => '#5C6B4A',
+		'chaber'      => '#6C90C4',
+		'coral'       => '#E8836B',
+		'grafit'      => '#4A4A4A',
+		'czekolada'   => '#4A2E1F',
+		'cappuccino'  => '#8B6F52',
+		'pistacja'    => '#A8C090',
+		'mocca'       => '#6F4E37',
+		'brzoskwinia' => '#F4C6A8',
+		'turkus'      => '#3FA8A0',
+		'morski'      => '#3C7A89',
+		'melange'     => '#A9A9A9',
+		'szmaragd'    => '#2E7D5B',
+		'cobalt'      => '#2A4E8C',
+		'limonka'     => '#9FCB3B',
+		'malina'      => '#9C2B4E',
+		'multicolor'  => '#B7A99A',
+		'szafir'      => '#2A4373',
+		'lawenda'     => '#B7A6D9',
+		'latte'       => '#C9A87C',
+		'lila'        => '#C6A4D4',
+		'musztarda'   => '#C9A227',
+		'musztard'    => '#C9A227',
+		'kwiaty'      => '#C99BAF',
+		'denim'       => '#4A6C8C',
+		'claret'      => '#6E1F2A',
+		'taupe'       => '#B39C86',
+		'silver'      => '#C4C4C4',
+		'gold'        => '#C9A94E',
+		'popiel'      => '#A8A8A0',
+		'paski'       => '#B0AFA8',
+		'lilia'       => '#F2EDE4',
+		'carmel'      => '#A9702D',
+		'kaszmir'     => '#D8C9A8',
+		'pattern'     => '#B0AFA8',
+		'fiolek'      => '#6A4C93',
+		'moro'        => '#5A5F3D',
+		'amarant'     => '#9F2B4E',
+		'burgund'     => '#6E1F2A',
+		'marsala'     => '#7B3F42',
+		'chocolate'   => '#4A2E1F',
+		'cream'       => '#F2EDE4',
+		'lazur'       => '#4A90C4',
+		'koral'       => '#E8836B',
+		'rubin'       => '#7D1F32',
+		'rudy'        => '#A9512A',
+		'wrzos'       => '#8E7A96',
+		'magenta'     => '#C2185B',
+		'purpura'     => '#6B2D5C',
+		'houndstooth' => '#4A4A4A',
+		'sand'        => '#D8C9A3',
+		'indygo'      => '#2E2A6C',
+		'pepitka'     => '#4A4A4A',
+		'agawa'       => '#7A9B76',
+		'kratka'      => '#A8A8A0',
+		'satyna'      => '#E8E0D4',
+		'ecri'        => '#E8E0D4',
+		'honey'       => '#C9962E',
+		'zielen'      => '#4B7355',
+		'panterka'    => '#8B6F47',
+		'mousse'      => '#D8C9B8',
+		'morela'      => '#E8A96B',
+		'graphit'     => '#4A4A4A',
+		'zebra'       => '#3A3A3A',
+		'rozany'      => '#D98E9B',
+		'miedziany'  => '#B5651D',
+		'raspberry'   => '#9C2B4E',
+		'waves'       => '#A8A8A0',
+		'ochra'       => '#C9962E',
+		'stripes'     => '#A8A8A0',
+		'groszki'     => '#A8A8A0',
+		'zolty'       => '#E8C547',
+		'cytryna'     => '#E8DE5A',
+		'neon'        => '#D4FF3D',
+		'wanilia'     => '#F2E8C9',
+		'atrament'    => '#1F2A38',
+		'punti'       => '#A8A8A0',
+		'seaside'     => '#6FA8AF',
+		'liscie'      => '#4B7355',
+		'jeans'       => '#4A6C8C',
+		'dots'        => '#A8A8A0',
+		'flowers'     => '#C99BAF',
+		'blekit'      => '#7EB6D9',
+		'sliwka'      => '#5C3552',
+		'smietana'    => '#F2EDE4',
+		'smietanka'   => '#F2EDE4',
+		'golebi'      => '#B8B3A9',
+		'sloniowa'    => '#F2EDE4',
+		'loso'        => '#E8927A',
+		'losos'       => '#E8927A',
 	);
+}
+
+/**
+ * Lighten or darken a hex color by a percentage per RGB channel.
+ *
+ * @param string $hex     Hex color (#RGB or #RRGGBB).
+ * @param float  $percent Positive = lighten, negative = darken.
+ * @return string Hex string (#RRGGBB).
+ */
+function fashion_brand_theme_adjust_color_brightness( $hex, $percent ) {
+	$hex = ltrim( (string) $hex, '#' );
+
+	if ( 3 === strlen( $hex ) ) {
+		$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+	}
+
+	if ( 6 !== strlen( $hex ) || ! ctype_xdigit( $hex ) ) {
+		return '#D6D2CB';
+	}
+
+	$percent = (float) $percent;
+	$out     = '';
+
+	for ( $i = 0; $i < 3; $i++ ) {
+		$channel = hexdec( substr( $hex, $i * 2, 2 ) );
+		$channel = (int) round( $channel + ( $channel * ( $percent / 100 ) ) );
+		$channel = max( 0, min( 255, $channel ) );
+		$out    .= str_pad( dechex( $channel ), 2, '0', STR_PAD_LEFT );
+	}
+
+	return '#' . strtoupper( $out );
+}
+
+/**
+ * Hex for a color term slug.
+ *
+ * @param string $slug Term slug.
+ * @return string
+ */
+function fashion_brand_theme_get_color_hex( $slug ) {
+	$map  = fashion_brand_theme_color_swatch_map();
+	$slug = sanitize_title( $slug );
+
+	if ( isset( $map[ $slug ] ) ) {
+		return $map[ $slug ];
+	}
+
+	if ( 0 === strpos( $slug, 'light-' ) ) {
+		$base = substr( $slug, 6 );
+		if ( isset( $map[ $base ] ) ) {
+			return fashion_brand_theme_adjust_color_brightness( $map[ $base ], 18 );
+		}
+	} elseif ( 0 === strpos( $slug, 'dark-' ) ) {
+		$base = substr( $slug, 5 );
+		if ( isset( $map[ $base ] ) ) {
+			return fashion_brand_theme_adjust_color_brightness( $map[ $base ], -18 );
+		}
+	}
+
+	return '#D6D2CB';
 }
 
 /**
@@ -85,19 +254,6 @@ function fashion_brand_theme_ensure_product_attributes() {
 	}
 
 	delete_transient( 'wc_attribute_taxonomies' );
-}
-
-/**
- * Hex for a color term slug.
- *
- * @param string $slug Term slug.
- * @return string
- */
-function fashion_brand_theme_get_color_hex( $slug ) {
-	$map = fashion_brand_theme_color_swatch_map();
-	$slug = sanitize_title( $slug );
-
-	return $map[ $slug ] ?? '#D6D2CB';
 }
 
 /**
