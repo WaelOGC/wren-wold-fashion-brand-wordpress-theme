@@ -67,6 +67,91 @@ function fashion_brand_theme_get_category_icon_definitions() {
 }
 
 /**
+ * Original hand-drawn line icons for collection tags in the header menu.
+ *
+ * @return array<string, string> Icon key => SVG markup.
+ */
+function fashion_brand_theme_get_collection_icon_definitions() {
+	static $definitions = null;
+
+	if ( null !== $definitions ) {
+		return $definitions;
+	}
+
+	$svg_open  = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false">';
+	$svg_close = '</svg>';
+
+	$definitions = array(
+		'essentials' => $svg_open . '<circle cx="12" cy="7" r="2.5" /><path d="M7 20 V12.5 C7 10.5 9 9 12 9 C15 9 17 10.5 17 12.5 V20" /><path d="M9.5 20 H14.5" />' . $svg_close,
+		'lounge'     => $svg_open . '<path d="M4 15 H20" /><path d="M5 15 V18 H19 V15" /><path d="M7 15 V11 C7 9 9 7.5 12 7.5 C15 7.5 17 9 17 11 V15" /><path d="M9 11.5 H15" />' . $svg_close,
+		'evening'    => $svg_open . '<path d="M9 5 H15 L17 10 L19.5 20.5 H4.5 L7 10 Z" /><path d="M10 5 C10 5 11 6.5 12 6.5 C13 6.5 14 5 14 5" /><path d="M12 2.5 V4" />' . $svg_close,
+		'weekend'    => $svg_open . '<circle cx="12" cy="12" r="4" /><path d="M12 3 V5" /><path d="M12 19 V21" /><path d="M3 12 H5" /><path d="M19 12 H21" /><path d="M5.6 5.6 L7 7" /><path d="M17 17 L18.4 18.4" /><path d="M18.4 5.6 L17 7" /><path d="M7 17 L5.6 18.4" />' . $svg_close,
+		'work'       => $svg_open . '<rect x="4" y="8" width="16" height="11" rx="1" /><path d="M9 8 V6.5 C9 5.5 10 4.5 12 4.5 C14 4.5 15 5.5 15 6.5 V8" /><path d="M4 13 H20" />' . $svg_close,
+		'collection' => $svg_open . '<rect x="5" y="5" width="10" height="10" rx="1" /><path d="M9 15 H15 C16 15 17 14 17 13 V9" /><path d="M11 17 H17 C18 17 19 16 19 15 V11" />' . $svg_close,
+	);
+
+	return $definitions;
+}
+
+/**
+ * Resolve a collection icon key from slug / name.
+ *
+ * @param string $slug Collection term slug.
+ * @param string $name Collection term name.
+ * @return string
+ */
+function fashion_brand_theme_get_collection_icon_key( $slug, $name = '' ) {
+	$slug = sanitize_title( (string) $slug );
+	$name = strtolower( (string) $name );
+
+	$by_slug = array(
+		'everyday-essentials'    => 'essentials',
+		'loungewear'             => 'lounge',
+		'occasion-evening-wear'  => 'evening',
+		'weekend'                => 'weekend',
+		'workwear'               => 'work',
+	);
+
+	if ( isset( $by_slug[ $slug ] ) ) {
+		return $by_slug[ $slug ];
+	}
+
+	if ( false !== strpos( $name, 'essential' ) ) {
+		return 'essentials';
+	}
+	if ( false !== strpos( $name, 'lounge' ) ) {
+		return 'lounge';
+	}
+	if ( false !== strpos( $name, 'evening' ) || false !== strpos( $name, 'occasion' ) ) {
+		return 'evening';
+	}
+	if ( false !== strpos( $name, 'weekend' ) ) {
+		return 'weekend';
+	}
+	if ( false !== strpos( $name, 'work' ) ) {
+		return 'work';
+	}
+
+	return 'collection';
+}
+
+/**
+ * Return inline SVG markup for a collection icon key.
+ *
+ * @param string $icon_key Icon key.
+ * @return string
+ */
+function fashion_brand_theme_get_collection_icon_svg( $icon_key ) {
+	$definitions = fashion_brand_theme_get_collection_icon_definitions();
+
+	if ( ! is_string( $icon_key ) || ! isset( $definitions[ $icon_key ] ) ) {
+		return $definitions['collection'];
+	}
+
+	return $definitions[ $icon_key ];
+}
+
+/**
  * Return inline SVG markup for a category icon key.
  *
  * @param string $icon_key Icon key.

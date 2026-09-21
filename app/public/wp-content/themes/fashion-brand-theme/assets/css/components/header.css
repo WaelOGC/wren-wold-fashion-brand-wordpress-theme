@@ -359,6 +359,167 @@
 	color: var(--color-accent);
 }
 
+/* Shop + Collections dropdowns — shared row/icon styling */
+#shop-submenu,
+#collections-submenu {
+	flex-direction: column;
+	gap: 2px;
+}
+
+#shop-submenu.is-open,
+#collections-submenu.is-open {
+	display: flex;
+}
+
+#shop-submenu > .menu-item > a,
+#collections-submenu > .menu-item > a {
+	min-height: auto;
+	padding: 0;
+}
+
+.shop-nav__item--all {
+	margin-bottom: var(--space-2);
+	padding-bottom: var(--space-2);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.shop-nav__item--all > .shop-nav__link {
+	min-height: 2rem;
+	padding-block: 0.35rem;
+	padding-inline: var(--space-2);
+	color: var(--color-text);
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-size: 0.6875rem;
+}
+
+.shop-nav__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	min-width: 0;
+	min-height: 28px;
+}
+
+.shop-nav__link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 28px;
+	padding-inline: var(--space-2);
+	font-size: 14px;
+	color: var(--color-text-muted);
+	text-decoration: none;
+}
+
+.shop-nav__link:hover,
+.shop-nav__link:focus-visible {
+	color: var(--color-text);
+}
+
+.shop-nav__link.is-active {
+	color: var(--color-text);
+	font-weight: 600;
+}
+
+.shop-nav__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	color: var(--color-text-muted);
+}
+
+.shop-nav__icon svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.shop-nav__toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 28px;
+	height: 28px;
+	min-width: 28px;
+	min-height: 28px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-muted);
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.shop-nav__toggle:focus {
+	outline: none;
+}
+
+.shop-nav__toggle:focus-visible {
+	outline: var(--focus-outline-width) solid var(--color-focus);
+	outline-offset: var(--focus-outline-offset);
+}
+
+.shop-nav__toggle-icon {
+	position: relative;
+	width: 0.625rem;
+	height: 0.625rem;
+}
+
+.shop-nav__toggle-icon::before,
+.shop-nav__toggle-icon::after {
+	content: "";
+	position: absolute;
+	background-color: currentColor;
+	transition: transform var(--transition-base);
+}
+
+.shop-nav__toggle-icon::before {
+	top: 50%;
+	left: 0;
+	width: 100%;
+	height: 1px;
+	transform: translateY(-50%);
+}
+
+.shop-nav__toggle-icon::after {
+	top: 0;
+	left: 50%;
+	width: 1px;
+	height: 100%;
+	transform: translateX(-50%);
+}
+
+.shop-nav__toggle[aria-expanded="true"] .shop-nav__toggle-icon::after {
+	transform: translateX(-50%) scaleY(0);
+}
+
+.shop-nav__sublist {
+	list-style: none;
+	display: none;
+	flex-direction: column;
+	gap: 2px;
+	margin: 2px 0 0;
+	padding: 0 0 0 20px;
+}
+
+.shop-nav__sublist.is-open {
+	display: flex;
+}
+
+.shop-nav__sublist .shop-nav__link {
+	min-height: 28px;
+	font-size: 0.8125rem;
+}
+
 .header-search-panel {
 	width: 100%;
 	max-width: 100%;
@@ -553,10 +714,10 @@ body.is-header-nav-open {
 		top: 100%;
 		left: 0;
 		z-index: 30;
-		min-width: 14rem;
-		max-width: min(18rem, calc(100vw - (var(--container-padding) * 2)));
-		max-height: min(24rem, calc(100dvh - var(--site-header-offset, 4.5rem) - var(--space-6)));
-		padding: var(--space-3);
+		min-width: 15.5rem;
+		max-width: min(20rem, calc(100vw - (var(--container-padding) * 2)));
+		max-height: min(32rem, calc(100dvh - var(--site-header-offset, 4.5rem) - var(--space-6)));
+		padding: var(--space-3) var(--space-2);
 		border: var(--border-default);
 		border-radius: var(--radius-md);
 		background-color: var(--color-surface);
@@ -585,8 +746,37 @@ body.is-header-nav-open {
 		display: block;
 	}
 
-	.sub-menu .menu-item a {
-		min-height: var(--touch-target-min);
+	.menu-item-has-children:hover > #shop-submenu,
+	.menu-item-has-children:focus-within > #shop-submenu,
+	.menu-item-has-children:hover > #collections-submenu,
+	.menu-item-has-children:focus-within > #collections-submenu {
+		display: flex;
+	}
+
+	.sub-menu > .menu-item > a {
+		min-height: 2.25rem;
+		padding-block: 0.35rem;
+	}
+
+	#shop-submenu > .shop-nav__item > a,
+	#shop-submenu .shop-nav__link,
+	#collections-submenu > .shop-nav__item > a,
+	#collections-submenu .shop-nav__link {
+		min-height: 28px;
+		padding-block: 0;
+	}
+
+	/* Keep nested +/− toggles visible inside the hover Shop dropdown */
+	#shop-submenu .shop-nav__toggle {
+		display: inline-flex;
+	}
+
+	#shop-submenu .shop-nav__sublist {
+		display: none;
+	}
+
+	#shop-submenu .shop-nav__sublist.is-open {
+		display: flex;
 	}
 }
 

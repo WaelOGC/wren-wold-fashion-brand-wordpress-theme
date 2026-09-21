@@ -162,6 +162,39 @@
 
 	bindSubmenuToggles();
 
+	function bindShopNavToggles() {
+		document.addEventListener( 'click', function ( event ) {
+			const target = event.target;
+
+			if ( ! ( target instanceof Element ) ) {
+				return;
+			}
+
+			const btn = target.closest( '.shop-nav__toggle' );
+
+			if ( ! btn ) {
+				return;
+			}
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			const sublistId = btn.getAttribute( 'aria-controls' );
+			const sublist = sublistId ? document.getElementById( sublistId ) : null;
+
+			if ( ! sublist ) {
+				return;
+			}
+
+			const willOpen = ! sublist.classList.contains( 'is-open' );
+			sublist.classList.toggle( 'is-open', willOpen );
+			setExpanded( btn, willOpen );
+			updateHeaderOffset();
+		} );
+	}
+
+	bindShopNavToggles();
+
 	document.addEventListener( 'keydown', function ( event ) {
 		if ( 'Escape' !== event.key ) {
 			return;

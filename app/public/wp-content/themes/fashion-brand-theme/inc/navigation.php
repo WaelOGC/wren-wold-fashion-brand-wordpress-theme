@@ -285,9 +285,10 @@ function fashion_brand_theme_primary_nav_fallback( $args ) {
 
 	$primary_items = array(
 		array(
-			'label'    => __( 'Shop', 'fashion-brand-theme' ),
-			'url'      => fashion_brand_theme_get_shop_url(),
-			'children' => fashion_brand_theme_get_shop_categories(),
+			'label'     => __( 'Shop', 'fashion-brand-theme' ),
+			'url'       => fashion_brand_theme_get_shop_url(),
+			'children'  => fashion_brand_theme_get_shop_category_tree(),
+			'child_url' => 'product_cat',
 		),
 		array(
 			'label'     => __( 'Collections', 'fashion-brand-theme' ),
@@ -327,12 +328,109 @@ function fashion_brand_theme_primary_nav_fallback( $args ) {
 			fashion_brand_theme_render_submenu_toggle( $submenu_id, $item['label'] );
 			echo '<ul id="' . esc_attr( $submenu_id ) . '" class="sub-menu">';
 
-			$is_collections = ! empty( $item['child_url'] ) && 'collection' === $item['child_url'];
+			$child_type = ! empty( $item['child_url'] ) ? $item['child_url'] : '';
 
-			if ( $is_collections ) {
+			if ( 'collection' === $child_type ) {
+				echo '<li class="menu-item shop-nav__item shop-nav__item--all">';
+				echo '<a class="shop-nav__link" href="' . esc_url( fashion_brand_theme_get_page_url( 'collections' ) ) . '">' . esc_html__( 'All Collections', 'fashion-brand-theme' ) . '</a>';
+				echo '</li>';
+
 				foreach ( $item['children'] as $collection ) {
-					echo '<li class="menu-item">';
-					echo '<a href="' . esc_url( $collection['url'] ) . '">' . esc_html( $collection['name'] ) . '</a>';
+					$icon_svg = '';
+					if ( function_exists( 'fashion_brand_theme_get_collection_icon_key' ) ) {
+						$icon_key = fashion_brand_theme_get_collection_icon_key( $collection['slug'], $collection['name'] );
+						$icon_svg = fashion_brand_theme_get_collection_icon_svg( $icon_key );
+					}
+
+					echo '<li class="menu-item shop-nav__item">';
+					echo '<a class="shop-nav__link" href="' . esc_url( $collection['url'] ) . '">';
+					if ( $icon_svg ) {
+						echo '<span class="shop-nav__icon" aria-hidden="true">' . $icon_svg . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted inline SVG from theme definitions.
+					}
+					echo '<span>' . esc_html( $collection['name'] ) . '</span>';
+					echo '</a>';
+					echo '</li>';
+				}
+			} elseif ( 'product_cat' === $child_type ) {
+				$queried_cat_slug = '';
+				if ( is_product_category() ) {
+					$queried_term = get_queried_object();
+					if ( $queried_term instanceof WP_Term ) {
+						$queried_cat_slug = $queried_term->slug;
+					}
+				}
+
+				echo '<li class="menu-item shop-nav__item shop-nav__item--all">';
+				echo '<a class="shop-nav__link" href="' . esc_url( fashion_brand_theme_get_shop_url() ) . '">' . esc_html__( 'All Products', 'fashion-brand-theme' ) . '</a>';
+				echo '</li>';
+
+				foreach ( $item['children'] as $slug => $category ) {
+					$children   = isset( $category['children'] ) ? $category['children'] : array();
+					$has_nested = ! empty( $children );
+					$term_id    = isset( $category['term_id'] ) ? (int) $category['term_id'] : 0;
+					$label      = $category['label'];
+					$sublist_id = $has_nested ? 'shop-nav-cat-' . sanitize_html_class( $slug ) : '';
+					$icon_svg   = '';
+
+					if ( $term_id > 0 && function_exists( 'fashion_brand_theme_get_category_icon_key' ) ) {
+						$icon_key = fashion_brand_theme_get_category_icon_key( $term_id );
+						$icon_svg = fashion_brand_theme_get_category_icon_svg( $icon_key );
+					}
+
+					$is_self_active = ( $queried_cat_slug === $slug );
+					$child_active   = false;
+					if ( $has_nested ) {
+						foreach ( array_keys( $children ) as $child_slug ) {
+							if ( $queried_cat_slug === $child_slug ) {
+								$child_active = true;
+								break;
+							}
+						}
+					}
+					$is_active    = $is_self_active || $child_active;
+					$sublist_open = $has_nested && $is_active;
+					$item_class   = $has_nested ? 'menu-item shop-nav__item shop-nav__item--has-children' : 'menu-item shop-nav__item';
+					$category_url = fashion_brand_theme_get_product_category_url( $slug );
+
+					echo '<li class="' . esc_attr( $item_class ) . '">';
+					echo '<div class="shop-nav__row">';
+					echo '<a class="shop-nav__link' . ( $is_active ? ' is-active' : '' ) . '" href="' . esc_url( $category_url ) . '">';
+					if ( $icon_svg ) {
+						echo '<span class="shop-nav__icon" aria-hidden="true">' . $icon_svg . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted inline SVG from theme definitions.
+					}
+					echo '<span>' . esc_html( $label ) . '</span>';
+					echo '</a>';
+
+					if ( $has_nested ) {
+						printf(
+							'<button type="button" class="shop-nav__toggle" aria-expanded="%1$s" aria-controls="%2$s" aria-label="%3$s"><span class="shop-nav__toggle-icon" aria-hidden="true"></span></button>',
+							$sublist_open ? 'true' : 'false',
+							esc_attr( $sublist_id ),
+							esc_attr(
+								sprintf(
+									/* translators: %s: parent category label. */
+									__( 'Toggle %s subcategories', 'fashion-brand-theme' ),
+									$label
+								)
+							)
+						);
+					}
+
+					echo '</div>';
+
+					if ( $has_nested ) {
+						echo '<ul id="' . esc_attr( $sublist_id ) . '" class="shop-nav__sublist' . ( $sublist_open ? ' is-open' : '' ) . '">';
+						foreach ( $children as $child_slug => $child_name ) {
+							$child_is_active = ( $queried_cat_slug === $child_slug );
+							echo '<li class="menu-item shop-nav__item">';
+							echo '<a class="shop-nav__link' . ( $child_is_active ? ' is-active' : '' ) . '" href="' . esc_url( fashion_brand_theme_get_product_category_url( $child_slug ) ) . '">';
+							echo '<span>' . esc_html( $child_name ) . '</span>';
+							echo '</a>';
+							echo '</li>';
+						}
+						echo '</ul>';
+					}
+
 					echo '</li>';
 				}
 			} else {
