@@ -177,6 +177,7 @@
 	align-items: center;
 	gap: var(--space-2);
 	min-width: 0;
+	min-height: var(--touch-target-min);
 }
 
 .shop-filters__row .shop-filters__check {
