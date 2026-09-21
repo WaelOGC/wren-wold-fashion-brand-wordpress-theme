@@ -20,7 +20,6 @@ $badges   = fashion_brand_theme_get_product_badges( $product );
 $colors   = fashion_brand_theme_get_product_color_terms( $product );
 $rating   = (float) $product->get_average_rating();
 $count    = (int) $product->get_review_count();
-$number   = fashion_brand_theme_get_product_number_label( $product );
 $permalink = get_permalink( $product->get_id() );
 ?>
 <li <?php wc_product_class( 'product-card-item', $product ); ?>>
@@ -34,8 +33,6 @@ $permalink = get_permalink( $product->get_id() );
 					?>
 				</span>
 			</a>
-
-			<span class="product-card__number"><?php echo esc_html( $number ); ?></span>
 
 			<?php if ( ! empty( $badges ) ) : ?>
 				<span class="product-card__badges">
