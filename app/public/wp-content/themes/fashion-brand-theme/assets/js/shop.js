@@ -6,54 +6,164 @@
 (function () {
 	'use strict';
 
-	var WISH_KEY = 'wren_wishlist';
-
-	function getWishlist() {
-		try {
-			return JSON.parse(localStorage.getItem(WISH_KEY) || '[]');
-		} catch (e) {
-			return [];
-		}
+	function getWishlistConfig() {
+		return window.fashionBrandThemeWishlist || {};
 	}
 
-	function setWishlist(ids) {
-		localStorage.setItem(WISH_KEY, JSON.stringify(ids));
-		try {
-			document.dispatchEvent(new CustomEvent('wren:wishlist-changed'));
-		} catch (e) {
-			/* ignore */
-		}
+	function isWishlistLoggedIn() {
+		var v = getWishlistConfig().isLoggedIn;
+		return v === true || v === 1 || v === '1';
 	}
 
-	function syncWishlistButtons() {
-		var ids = getWishlist();
+	function syncWishlistButtons(ids) {
+		var idSet = {};
+		(ids || []).forEach(function (id) {
+			idSet[String(id)] = true;
+		});
 		document.querySelectorAll('[data-wishlist-toggle]').forEach(function (btn) {
-			var id = String(btn.getAttribute('data-product-id'));
-			var on = ids.indexOf(id) !== -1;
+			var id = String(btn.getAttribute('data-product-id') || '');
+			var on = !!idSet[id];
 			btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 			btn.classList.toggle('is-active', on);
 		});
 	}
 
+	function emitWishlistChanged(detail) {
+		try {
+			document.dispatchEvent(new CustomEvent('wren:wishlist-changed', { detail: detail || {} }));
+		} catch (e) {
+			/* ignore */
+		}
+	}
+
+	function dismissGuestTip() {
+		document.querySelectorAll('[data-wishlist-signin-tip]').forEach(function (tip) {
+			tip.remove();
+		});
+	}
+
+	function showGuestSignInTip(btn) {
+		dismissGuestTip();
+		var cfg = getWishlistConfig();
+		var tip = document.createElement('div');
+		tip.className = 'wishlist-signin-tip';
+		tip.setAttribute('data-wishlist-signin-tip', '');
+		tip.setAttribute('role', 'status');
+
+		var text = document.createElement('span');
+		text.className = 'wishlist-signin-tip__text';
+		text.textContent = (cfg.i18n && cfg.i18n.signIn) || 'Sign in to save favorites';
+		tip.appendChild(text);
+
+		if (cfg.accountUrl) {
+			var link = document.createElement('a');
+			link.className = 'wishlist-signin-tip__link';
+			link.href = cfg.accountUrl;
+			link.textContent = (cfg.i18n && cfg.i18n.signInCta) || 'Sign in';
+			tip.appendChild(link);
+		}
+
+		document.body.appendChild(tip);
+
+		var rect = btn.getBoundingClientRect();
+		var tipWidth = tip.offsetWidth || 220;
+		var left = rect.left + rect.width / 2 - tipWidth / 2;
+		left = Math.max(8, Math.min(left, window.innerWidth - tipWidth - 8));
+		tip.style.position = 'fixed';
+		tip.style.left = left + 'px';
+		tip.style.top = rect.bottom + 8 + 'px';
+
+		var dismissTimer = window.setTimeout(dismissGuestTip, 4000);
+
+		function onDocClick(event) {
+			if (event.target.closest('[data-wishlist-signin-tip]')) {
+				return;
+			}
+			if (event.target.closest('[data-wishlist-toggle]') === btn) {
+				return;
+			}
+			window.clearTimeout(dismissTimer);
+			dismissGuestTip();
+			document.removeEventListener('click', onDocClick);
+		}
+
+		window.setTimeout(function () {
+			document.addEventListener('click', onDocClick);
+		}, 0);
+	}
+
+	function toggleWishlistAjax(productId, btn) {
+		var cfg = getWishlistConfig();
+		if (!cfg.ajaxUrl || !cfg.nonce) {
+			return;
+		}
+
+		if (btn) {
+			btn.disabled = true;
+		}
+
+		var body = new FormData();
+		body.append('action', 'fbt_wishlist_toggle');
+		body.append('nonce', cfg.nonce);
+		body.append('product_id', String(productId));
+
+		fetch(cfg.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: body
+		})
+			.then(function (r) {
+				return r.json();
+			})
+			.then(function (json) {
+				if (!json || !json.success || !json.data) {
+					return;
+				}
+				syncWishlistButtons(json.data.ids || []);
+				emitWishlistChanged({
+					ids: json.data.ids || [],
+					count: json.data.count,
+					added: json.data.added,
+					productId: json.data.product_id
+				});
+			})
+			.catch(function () {
+				/* ignore */
+			})
+			.finally(function () {
+				if (btn) {
+					btn.disabled = false;
+				}
+			});
+	}
+
 	function initWishlist() {
+		// main.js owns the global click handler; shop only binds if main did not.
+		if (window.__fbtWishlistClickBound) {
+			return;
+		}
+		window.__fbtWishlistClickBound = true;
+
 		document.addEventListener('click', function (event) {
 			var btn = event.target.closest('[data-wishlist-toggle]');
 			if (!btn) {
 				return;
 			}
 			event.preventDefault();
-			var id = String(btn.getAttribute('data-product-id'));
-			var ids = getWishlist();
-			var idx = ids.indexOf(id);
-			if (idx === -1) {
-				ids.push(id);
-			} else {
-				ids.splice(idx, 1);
+			event.stopPropagation();
+
+			var cfg = getWishlistConfig();
+			if (!isWishlistLoggedIn()) {
+				showGuestSignInTip(btn);
+				return;
 			}
-			setWishlist(ids);
-			syncWishlistButtons();
+
+			var id = btn.getAttribute('data-product-id');
+			if (!id) {
+				return;
+			}
+			toggleWishlistAjax(id, btn);
 		});
-		syncWishlistButtons();
 	}
 
 	function initQuickView() {

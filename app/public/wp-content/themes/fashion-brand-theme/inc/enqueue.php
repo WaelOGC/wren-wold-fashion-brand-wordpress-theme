@@ -64,6 +64,12 @@ function fashion_brand_theme_enqueue_assets() {
 		true
 	);
 
+	wp_localize_script(
+		'fashion-brand-theme-main',
+		'fashionBrandThemeWishlist',
+		fashion_brand_theme_wishlist_script_data()
+	);
+
 	if ( is_front_page() ) {
 		wp_enqueue_script(
 			'fashion-brand-theme-homepage-cinematic',
@@ -101,6 +107,12 @@ function fashion_brand_theme_enqueue_assets() {
 				'nonce'          => wp_create_nonce( 'fashion_brand_theme_shop' ),
 				'currencySymbol' => function_exists( 'get_woocommerce_currency_symbol' ) ? html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ) : '€',
 			)
+		);
+
+		wp_localize_script(
+			'fashion-brand-theme-shop',
+			'fashionBrandThemeWishlist',
+			fashion_brand_theme_wishlist_script_data()
 		);
 	}
 
@@ -144,6 +156,29 @@ function fashion_brand_theme_enqueue_assets() {
 			array(),
 			FASHION_BRAND_THEME_VERSION,
 			true
+		);
+	}
+
+	if ( is_page( 'wishlist' ) ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-wishlist',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/wishlist.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+
+		wp_enqueue_script(
+			'fashion-brand-theme-wishlist-page',
+			FASHION_BRAND_THEME_URI . '/assets/js/wishlist-page.js',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'fashion-brand-theme-wishlist-page',
+			'fashionBrandThemeWishlist',
+			fashion_brand_theme_wishlist_script_data()
 		);
 	}
 }

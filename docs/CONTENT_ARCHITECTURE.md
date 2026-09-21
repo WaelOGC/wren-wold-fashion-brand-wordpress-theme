@@ -159,3 +159,9 @@ Collections appear as a top-level primary navigation item with these two as drop
 Reviews will NOT be a top-level navigation item for the MVP.
 
 Customer reviews should primarily appear on product pages.
+
+---
+
+## Wishlist (as of v0.4.38)
+
+Wishlist is account-based only (WooCommerce customer meta `_fbt_wishlist`), no guest/localStorage fallback. Guests clicking the wishlist heart see a "Sign in to save favorites" prompt and nothing is saved. A future iteration may add a localStorage fallback for guests that merges into their account on login — not implemented yet, deferred by owner decision.

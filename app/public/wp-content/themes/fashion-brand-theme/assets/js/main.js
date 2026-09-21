@@ -274,25 +274,26 @@
 		);
 	}
 
-	function getWishlistIds() {
-		try {
-			return JSON.parse( localStorage.getItem( 'wren_wishlist' ) || '[]' );
-		} catch ( e ) {
-			return [];
-		}
+	function getWishlistConfig() {
+		return window.fashionBrandThemeWishlist || {};
 	}
 
-	function syncMobileWishlistBadge() {
+	function isWishlistLoggedIn() {
+		const v = getWishlistConfig().isLoggedIn;
+		return v === true || v === 1 || v === '1';
+	}
+
+	function syncMobileWishlistBadge( count ) {
 		const badges = document.querySelectorAll( '[data-wishlist-count]' );
 		if ( ! badges.length ) {
 			return;
 		}
 
-		const count = getWishlistIds().length;
+		const n = typeof count === 'number' ? count : 0;
 
 		badges.forEach( function ( badge ) {
-			badge.textContent = String( count );
-			if ( count > 0 ) {
+			badge.textContent = String( n );
+			if ( n > 0 ) {
 				badge.removeAttribute( 'hidden' );
 			} else {
 				badge.setAttribute( 'hidden', '' );
@@ -300,7 +301,197 @@
 		} );
 	}
 
-	syncMobileWishlistBadge();
-	window.addEventListener( 'storage', syncMobileWishlistBadge );
-	document.addEventListener( 'wren:wishlist-changed', syncMobileWishlistBadge );
+	function syncWishlistButtons( ids ) {
+		const idSet = {};
+		( ids || [] ).forEach( function ( id ) {
+			idSet[ String( id ) ] = true;
+		} );
+
+		document.querySelectorAll( '[data-wishlist-toggle]' ).forEach( function ( btn ) {
+			const id = String( btn.getAttribute( 'data-product-id' ) || '' );
+			const on = !! idSet[ id ];
+			btn.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
+			btn.classList.toggle( 'is-active', on );
+		} );
+	}
+
+	function emitWishlistChanged( detail ) {
+		try {
+			document.dispatchEvent( new CustomEvent( 'wren:wishlist-changed', { detail: detail || {} } ) );
+		} catch ( e ) {
+			/* ignore */
+		}
+	}
+
+	function dismissGuestTip() {
+		document.querySelectorAll( '[data-wishlist-signin-tip]' ).forEach( function ( tip ) {
+			tip.remove();
+		} );
+	}
+
+	function showGuestSignInTip( btn ) {
+		dismissGuestTip();
+
+		const cfg = getWishlistConfig();
+		const tip = document.createElement( 'div' );
+		tip.className = 'wishlist-signin-tip';
+		tip.setAttribute( 'data-wishlist-signin-tip', '' );
+		tip.setAttribute( 'role', 'status' );
+
+		const text = document.createElement( 'span' );
+		text.className = 'wishlist-signin-tip__text';
+		text.textContent = ( cfg.i18n && cfg.i18n.signIn ) || 'Sign in to save favorites';
+
+		tip.appendChild( text );
+
+		if ( cfg.accountUrl ) {
+			const link = document.createElement( 'a' );
+			link.className = 'wishlist-signin-tip__link';
+			link.href = cfg.accountUrl;
+			link.textContent = ( cfg.i18n && cfg.i18n.signInCta ) || 'Sign in';
+			tip.appendChild( link );
+		}
+
+		document.body.appendChild( tip );
+
+		const rect = btn.getBoundingClientRect();
+		const tipWidth = tip.offsetWidth || 220;
+		let left = rect.left + rect.width / 2 - tipWidth / 2;
+		left = Math.max( 8, Math.min( left, window.innerWidth - tipWidth - 8 ) );
+		tip.style.position = 'fixed';
+		tip.style.left = left + 'px';
+		tip.style.top = rect.bottom + 8 + 'px';
+
+		const dismissTimer = window.setTimeout( dismissGuestTip, 4000 );
+
+		function onDocClick( event ) {
+			if ( event.target.closest( '[data-wishlist-signin-tip]' ) ) {
+				return;
+			}
+			if ( event.target.closest( '[data-wishlist-toggle]' ) === btn ) {
+				return;
+			}
+			window.clearTimeout( dismissTimer );
+			dismissGuestTip();
+			document.removeEventListener( 'click', onDocClick );
+		}
+
+		window.setTimeout( function () {
+			document.addEventListener( 'click', onDocClick );
+		}, 0 );
+	}
+
+	function applyWishlistState( data ) {
+		const ids = data && data.ids ? data.ids : [];
+		const count = typeof data.count === 'number' ? data.count : ids.length;
+		syncWishlistButtons( ids );
+		syncMobileWishlistBadge( count );
+		emitWishlistChanged( {
+			ids: ids,
+			count: count,
+			added: data && typeof data.added === 'boolean' ? data.added : undefined,
+			productId: data && data.product_id ? data.product_id : undefined,
+		} );
+	}
+
+	function fetchWishlistState() {
+		const cfg = getWishlistConfig();
+		if ( ! isWishlistLoggedIn() || ! cfg.ajaxUrl || ! cfg.nonce ) {
+			syncMobileWishlistBadge( 0 );
+			syncWishlistButtons( [] );
+			return;
+		}
+
+		const url =
+			cfg.ajaxUrl +
+			( cfg.ajaxUrl.indexOf( '?' ) === -1 ? '?' : '&' ) +
+			'action=fbt_wishlist_get&nonce=' +
+			encodeURIComponent( cfg.nonce );
+
+		fetch( url, { credentials: 'same-origin' } )
+			.then( function ( response ) {
+				return response.json();
+			} )
+			.then( function ( json ) {
+				if ( ! json || ! json.success || ! json.data ) {
+					return;
+				}
+				applyWishlistState( json.data );
+			} )
+			.catch( function () {
+				/* ignore */
+			} );
+	}
+
+	function toggleWishlist( productId, btn ) {
+		const cfg = getWishlistConfig();
+		if ( ! cfg.ajaxUrl || ! cfg.nonce ) {
+			return;
+		}
+
+		if ( btn ) {
+			btn.disabled = true;
+		}
+
+		const body = new FormData();
+		body.append( 'action', 'fbt_wishlist_toggle' );
+		body.append( 'nonce', cfg.nonce );
+		body.append( 'product_id', String( productId ) );
+
+		fetch( cfg.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: body,
+		} )
+			.then( function ( response ) {
+				return response.json();
+			} )
+			.then( function ( json ) {
+				if ( ! json || ! json.success || ! json.data ) {
+					return;
+				}
+				applyWishlistState( json.data );
+			} )
+			.catch( function () {
+				/* ignore */
+			} )
+			.finally( function () {
+				if ( btn ) {
+					btn.disabled = false;
+				}
+			} );
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		const btn = event.target.closest( '[data-wishlist-toggle]' );
+		if ( ! btn ) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+
+		const cfg = getWishlistConfig();
+		if ( ! isWishlistLoggedIn() ) {
+			showGuestSignInTip( btn );
+			return;
+		}
+
+		const productId = btn.getAttribute( 'data-product-id' );
+		if ( ! productId ) {
+			return;
+		}
+
+		toggleWishlist( productId, btn );
+	} );
+
+	window.__fbtWishlistClickBound = true;
+
+	fetchWishlistState();
+	document.addEventListener( 'wren:wishlist-changed', function ( event ) {
+		const detail = event && event.detail ? event.detail : null;
+		if ( detail && typeof detail.count === 'number' ) {
+			syncMobileWishlistBadge( detail.count );
+		}
+	} );
 }() );

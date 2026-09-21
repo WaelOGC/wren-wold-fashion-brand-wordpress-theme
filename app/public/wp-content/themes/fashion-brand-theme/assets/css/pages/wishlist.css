@@ -1,0 +1,61 @@
+/**
+ * Wishlist page styles.
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+.wishlist-page {
+	width: min(100% - 2 * var(--space-md, 1rem), var(--layout-max, 72rem));
+	margin: 0 auto;
+	padding: var(--space-xl, 2.5rem) 0 var(--space-3xl, 4rem);
+}
+
+.wishlist-page__header {
+	margin-bottom: var(--space-xl, 2.5rem);
+	text-align: center;
+}
+
+.wishlist-page__title {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.5rem);
+	font-weight: 400;
+	letter-spacing: -0.02em;
+	color: var(--color-ink);
+}
+
+.wishlist-page__signin,
+.wishlist-page__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.25rem;
+	min-height: 40vh;
+	padding: 2rem 1rem;
+	text-align: center;
+}
+
+.wishlist-page__signin-text,
+.wishlist-page__empty-text {
+	margin: 0;
+	font-family: var(--font-family-base);
+	font-size: 1.05rem;
+	line-height: 1.5;
+	color: var(--color-text);
+}
+
+.wishlist-page__grid {
+	padding-inline: 0;
+}
+
+.wishlist-page__grid ul.products.shop-grid {
+	margin-top: 0;
+}
+
+@media (max-width: 900px) {
+	.wishlist-page {
+		width: 100%;
+		padding: 1.5rem 16px calc(100px + env(safe-area-inset-bottom, 0px));
+	}
+}
