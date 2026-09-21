@@ -39,8 +39,11 @@ function fashion_brand_theme_get_product_category_slugs() {
 		'hoodies'  => __( 'Hoodies', 'fashion-brand-theme' ),
 		'knitwear' => __( 'Knitwear', 'fashion-brand-theme' ),
 		'shirts'   => __( 'Shirts', 'fashion-brand-theme' ),
+		'blouses'  => __( 'Blouses', 'fashion-brand-theme' ),
 		'pants'    => __( 'Pants', 'fashion-brand-theme' ),
+		'skirts'   => __( 'Skirts', 'fashion-brand-theme' ),
 		'dresses'  => __( 'Dresses', 'fashion-brand-theme' ),
+		'coats'    => __( 'Coats', 'fashion-brand-theme' ),
 	);
 }
 
