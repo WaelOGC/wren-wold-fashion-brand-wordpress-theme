@@ -17,31 +17,36 @@ if ( post_password_required() ) {
 	return;
 }
 
-$gallery_ids = fashion_brand_theme_get_product_page_gallery_ids( $product );
-$main_id     = $gallery_ids[0] ?? (int) $product->get_image_id();
-$categories  = wc_get_product_category_list( $product->get_id(), ', ' );
-$cat_terms   = get_the_terms( $product->get_id(), 'product_cat' );
-$primary_cat = ( $cat_terms && ! is_wp_error( $cat_terms ) ) ? $cat_terms[0] : null;
-$rating      = (float) $product->get_average_rating();
+$gallery_ids  = fashion_brand_theme_get_product_page_gallery_ids( $product );
+$main_id      = $gallery_ids[0] ?? (int) $product->get_image_id();
+$gallery_count = max( 1, count( $gallery_ids ) );
+$categories   = wc_get_product_category_list( $product->get_id(), ', ' );
+$cat_terms    = get_the_terms( $product->get_id(), 'product_cat' );
+$primary_cat  = ( $cat_terms && ! is_wp_error( $cat_terms ) ) ? $cat_terms[0] : null;
+$rating       = (float) $product->get_average_rating();
 $review_count = (int) $product->get_review_count();
 $shipping     = fashion_brand_theme_get_shipping_returns_copy();
 $detail_meta  = fashion_brand_theme_get_product_detail_meta( $product->get_id() );
 $product_tags = wc_get_product_tag_list( $product->get_id(), ', ' );
-$trust_line   = array_filter(
-	array_map(
-		'trim',
-		array(
-			fashion_brand_theme_get_stock_message( $product ),
-			$shipping['shipping'],
-			$shipping['returns'],
-		)
-	)
-);
+$is_organic   = has_term( 'organic', 'product_tag', $product->get_id() );
+$shop_url     = fashion_brand_theme_get_shop_url();
 ?>
 <div id="product-<?php the_ID(); ?>" <?php wc_product_class( 'product-page', $product ); ?>>
 
+	<div class="product-mobile-back" data-product-mobile-back>
+		<button
+			type="button"
+			class="product-mobile-back__btn"
+			data-product-back
+			data-shop-url="<?php echo esc_url( $shop_url ); ?>"
+			aria-label="<?php esc_attr_e( 'Go back', 'fashion-brand-theme' ); ?>"
+		>
+			<span aria-hidden="true">&larr;</span>
+		</button>
+	</div>
+
 	<nav class="product-breadcrumb" aria-label="<?php esc_attr_e( 'Breadcrumb', 'fashion-brand-theme' ); ?>">
-		<a href="<?php echo esc_url( fashion_brand_theme_get_shop_url() ); ?>"><?php esc_html_e( 'Shop', 'fashion-brand-theme' ); ?></a>
+		<a href="<?php echo esc_url( $shop_url ); ?>"><?php esc_html_e( 'Shop', 'fashion-brand-theme' ); ?></a>
 		<span aria-hidden="true">›</span>
 		<?php if ( $primary_cat ) : ?>
 			<a href="<?php echo esc_url( get_term_link( $primary_cat ) ); ?>"><?php echo esc_html( $primary_cat->name ); ?></a>
@@ -51,7 +56,7 @@ $trust_line   = array_filter(
 	</nav>
 
 	<p class="product-back">
-		<a href="<?php echo esc_url( fashion_brand_theme_get_shop_url() ); ?>">&larr; <?php esc_html_e( 'Back to the field', 'fashion-brand-theme' ); ?></a>
+		<a href="<?php echo esc_url( $shop_url ); ?>">&larr; <?php esc_html_e( 'Back to the field', 'fashion-brand-theme' ); ?></a>
 	</p>
 
 	<div class="product-split">
@@ -85,11 +90,22 @@ $trust_line   = array_filter(
 							'class'             => 'product-gallery-main__img',
 							'data-gallery-main' => 'true',
 							'alt'               => esc_attr( $product->get_name() ),
+							'draggable'         => 'false',
 						)
 					);
 				}
 				?>
 				<div class="product-gallery-zoom" data-zoom-lens hidden></div>
+
+				<?php if ( $gallery_count > 1 ) : ?>
+					<button type="button" class="product-gallery-nav product-gallery-nav--prev" data-gallery-prev aria-label="<?php esc_attr_e( 'Previous image', 'fashion-brand-theme' ); ?>">
+						<span aria-hidden="true">&lsaquo;</span>
+					</button>
+					<button type="button" class="product-gallery-nav product-gallery-nav--next" data-gallery-next aria-label="<?php esc_attr_e( 'Next image', 'fashion-brand-theme' ); ?>">
+						<span aria-hidden="true">&rsaquo;</span>
+					</button>
+					<span class="product-gallery-counter" data-gallery-counter aria-live="polite">1/<?php echo esc_html( (string) $gallery_count ); ?></span>
+				<?php endif; ?>
 			</div>
 		</div>
 
@@ -123,26 +139,22 @@ $trust_line   = array_filter(
 				<div class="product-atc-row">
 					<div class="product-atc-row__form">
 						<?php
-						if ( ! empty( $trust_line ) ) {
-							add_action(
-								'woocommerce_before_add_to_cart_quantity',
-								static function () use ( $trust_line ) {
-									static $rendered = false;
-									if ( $rendered ) {
-										return;
-									}
-									$rendered = true;
-									$trust_markup = array();
-									foreach ( $trust_line as $trust_item ) {
-										$trust_markup[] = '<span class="product-trust-line__item">' . esc_html( $trust_item ) . '</span>';
-									}
-									echo '<p class="product-trust-line">';
-									echo wp_kses_post( implode( '<span class="product-trust-line__sep" aria-hidden="true"> · </span>', $trust_markup ) );
-									echo '</p>';
-								},
-								5
-							);
-						}
+						add_action(
+							'woocommerce_after_add_to_cart_button',
+							static function () {
+								static $buy_now_rendered = false;
+								if ( $buy_now_rendered ) {
+									return;
+								}
+								$buy_now_rendered = true;
+								?>
+								<button type="submit" name="buy_now" value="1" class="button product-buy-now">
+									<?php esc_html_e( 'Buy it now', 'fashion-brand-theme' ); ?>
+								</button>
+								<?php
+							},
+							20
+						);
 
 						/**
 						 * Hook: woocommerce_single_product_summary — add to cart / variations.
@@ -153,13 +165,134 @@ $trust_line   = array_filter(
 
 					<div class="product-atc-row__actions" aria-label="<?php esc_attr_e( 'Product actions', 'fashion-brand-theme' ); ?>">
 						<button type="button" class="product-icon-btn product-icon-btn--icon-only" data-wishlist-toggle data-product-id="<?php echo esc_attr( (string) $product->get_id() ); ?>" aria-pressed="false" aria-label="<?php esc_attr_e( 'Add to wishlist', 'fashion-brand-theme' ); ?>">
-							<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.2-4.6-9.5-8.2C.6 9.7 2.1 6 5.5 6c1.9 0 3.2 1.1 3.9 2.2C10.1 7.1 11.4 6 13.3 6c3.4 0 4.9 3.7 3 6.8C19.2 16.4 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+							<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
 						</button>
 						<button type="button" class="product-icon-btn product-icon-btn--icon-only" data-share-product aria-label="<?php esc_attr_e( 'Share', 'fashion-brand-theme' ); ?>">
 							<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 8a3 3 0 1 0-2.8-4H12a3 3 0 0 0 .2 4L8.7 12.2a3 3 0 1 0 1.4 1.4L14 9.4A3 3 0 0 0 15 8zm-9 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="currentColor"/></svg>
 						</button>
 					</div>
 				</div>
+
+				<?php
+				$shipping_label = __( 'Free shipping', 'fashion-brand-theme' );
+				$returns_label  = __( 'Easy returns', 'fashion-brand-theme' );
+				$returns_sub    = __( '14 days', 'fashion-brand-theme' );
+				?>
+				<ul class="product-trust-badges" aria-label="<?php esc_attr_e( 'Purchase benefits', 'fashion-brand-theme' ); ?>">
+					<li class="product-trust-badges__item">
+						<span class="product-trust-badges__icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M3 7h11v10H3V7zm11 3h4l3 3v4h-7V10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+						</span>
+						<span class="product-trust-badges__text">
+							<span class="product-trust-badges__label" title="<?php echo esc_attr( $shipping['shipping'] ); ?>"><?php echo esc_html( $shipping_label ); ?></span>
+						</span>
+					</li>
+					<li class="product-trust-badges__item">
+						<span class="product-trust-badges__icon" aria-hidden="true">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M4 7h10a4 4 0 0 1 0 8H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11 4 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+						</span>
+						<span class="product-trust-badges__text">
+							<span class="product-trust-badges__label" title="<?php echo esc_attr( $shipping['returns'] ); ?>"><?php echo esc_html( $returns_label ); ?></span>
+							<span class="product-trust-badges__sub"><?php echo esc_html( $returns_sub ); ?></span>
+						</span>
+					</li>
+					<?php if ( $is_organic ) : ?>
+						<li class="product-trust-badges__item">
+							<span class="product-trust-badges__icon" aria-hidden="true">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M12 21c0-7 4-11 9-12-1 6-5 10-9 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 21c0-7-4-11-9-12 1 6 5 10 9 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 21V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+							</span>
+							<span class="product-trust-badges__text">
+								<span class="product-trust-badges__label"><?php esc_html_e( 'Sustainable materials', 'fashion-brand-theme' ); ?></span>
+							</span>
+						</li>
+					<?php endif; ?>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<?php
+	$details_parts = array();
+	if ( $product->get_short_description() ) {
+		$details_parts[] = wpautop( $product->get_short_description() );
+	}
+	if ( $product->get_description() ) {
+		$details_parts[] = wpautop( $product->get_description() );
+	}
+	if ( ! empty( $detail_meta['origin'] ) ) {
+		$details_parts[] = '<p><strong>' . esc_html__( 'Origin', 'fashion-brand-theme' ) . ':</strong> ' . esc_html( $detail_meta['origin'] ) . '</p>';
+	}
+
+	$materials_parts = array();
+	if ( ! empty( $detail_meta['composition'] ) ) {
+		$materials_parts[] = '<p><strong>' . esc_html__( 'Composition', 'fashion-brand-theme' ) . ':</strong> ' . esc_html( $detail_meta['composition'] ) . '</p>';
+	}
+	if ( ! empty( $detail_meta['care'] ) ) {
+		$materials_parts[] = '<p><strong>' . esc_html__( 'Care', 'fashion-brand-theme' ) . ':</strong> ' . esc_html( $detail_meta['care'] ) . '</p>';
+	}
+	?>
+
+	<div class="product-mobile-accordions" data-product-accordions>
+		<div class="product-accordion">
+			<button type="button" class="product-accordion__trigger" aria-expanded="false" data-accordion-trigger>
+				<span><?php esc_html_e( 'Details', 'fashion-brand-theme' ); ?></span>
+				<span class="product-accordion__chevron" aria-hidden="true"></span>
+			</button>
+			<div class="product-accordion__panel" hidden data-accordion-panel>
+				<?php
+				if ( ! empty( $details_parts ) ) {
+					echo wp_kses_post( implode( '', $details_parts ) );
+				} else {
+					echo '<p>' . esc_html__( 'No details available.', 'fashion-brand-theme' ) . '</p>';
+				}
+				?>
+			</div>
+		</div>
+
+		<div class="product-accordion">
+			<button type="button" class="product-accordion__trigger" aria-expanded="false" data-accordion-trigger>
+				<span><?php esc_html_e( 'Materials & Care', 'fashion-brand-theme' ); ?></span>
+				<span class="product-accordion__chevron" aria-hidden="true"></span>
+			</button>
+			<div class="product-accordion__panel" hidden data-accordion-panel>
+				<?php
+				if ( ! empty( $materials_parts ) ) {
+					echo wp_kses_post( implode( '', $materials_parts ) );
+				} else {
+					echo '<p>' . esc_html__( 'No materials information available.', 'fashion-brand-theme' ) . '</p>';
+				}
+				?>
+			</div>
+		</div>
+
+		<div class="product-accordion">
+			<button type="button" class="product-accordion__trigger" aria-expanded="false" data-accordion-trigger>
+				<span><?php esc_html_e( 'Shipping & Returns', 'fashion-brand-theme' ); ?></span>
+				<span class="product-accordion__chevron" aria-hidden="true"></span>
+			</button>
+			<div class="product-accordion__panel" hidden data-accordion-panel>
+				<p><?php echo esc_html( $shipping['shipping'] ); ?></p>
+				<p><?php echo esc_html( $shipping['returns'] ); ?></p>
+			</div>
+		</div>
+
+		<div class="product-accordion">
+			<button type="button" class="product-accordion__trigger" aria-expanded="false" data-accordion-trigger data-accordion-reviews>
+				<span><?php esc_html_e( 'Reviews', 'fashion-brand-theme' ); ?></span>
+				<span class="product-accordion__chevron" aria-hidden="true"></span>
+			</button>
+			<div class="product-accordion__panel" hidden data-accordion-panel>
+				<p>
+					<a class="product-accordion__reviews-link" href="#tab-title-reviews">
+						<?php
+						printf(
+							/* translators: %d: review count */
+							esc_html( _n( 'View %d review', 'View %d reviews', max( 1, $review_count ), 'fashion-brand-theme' ) ),
+							(int) max( 0, $review_count )
+						);
+						?>
+					</a>
+				</p>
 			</div>
 		</div>
 	</div>
@@ -203,10 +336,10 @@ $trust_line   = array_filter(
 
 	<section class="product-related-wrap">
 		<?php
-		$heading = apply_filters( 'woocommerce_product_related_products_heading', __( 'Related products', 'fashion-brand-theme' ) );
+		$heading = apply_filters( 'woocommerce_product_related_products_heading', __( 'You may also like', 'fashion-brand-theme' ) );
 		echo '<header class="product-related-wrap__header">';
 		echo '<h2>' . esc_html( $heading ) . '</h2>';
-		echo '<p>' . esc_html__( 'Other pieces from the same field.', 'fashion-brand-theme' ) . '</p>';
+		echo '<p class="product-related-wrap__subtitle">' . esc_html__( 'Other pieces from the same field.', 'fashion-brand-theme' ) . '</p>';
 		echo '</header>';
 		woocommerce_output_related_products();
 		?>

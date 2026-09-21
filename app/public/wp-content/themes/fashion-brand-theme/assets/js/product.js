@@ -20,40 +20,144 @@
 
 	function syncThumbActive(root, src) {
 		var thumbs = root.querySelectorAll('[data-gallery-thumb]');
+		var counter = root.querySelector('[data-gallery-counter]');
 		if (!thumbs.length || !src) {
 			return;
 		}
-		thumbs.forEach(function (btn) {
+		var activeIndex = 0;
+		thumbs.forEach(function (btn, index) {
 			var thumbSrc = btn.getAttribute('data-image-src') || '';
 			var match = thumbSrc && (thumbSrc === src || src.indexOf(thumbSrc) !== -1 || thumbSrc.indexOf(src) !== -1);
 			btn.classList.toggle('is-active', !!match);
 			btn.setAttribute('aria-pressed', match ? 'true' : 'false');
+			if (match) {
+				activeIndex = index;
+			}
 		});
+		root._galleryIndex = activeIndex;
+		updateGalleryCounter(counter, activeIndex, thumbs.length);
+	}
+
+	function updateGalleryCounter(counter, index, total) {
+		if (!counter) {
+			return;
+		}
+		counter.textContent = String(index + 1) + '/' + String(total);
+	}
+
+	function goToGalleryIndex(root, main, thumbs, counter, index) {
+		if (!thumbs.length) {
+			return;
+		}
+		var safe = ((index % thumbs.length) + thumbs.length) % thumbs.length;
+		var thumb = thumbs[safe];
+		var src = thumb.getAttribute('data-image-src');
+		var srcset = thumb.getAttribute('data-image-srcset');
+		if (!src) {
+			return;
+		}
+		setMainImage(main, src, srcset);
+		thumbs.forEach(function (btn, i) {
+			var active = i === safe;
+			btn.classList.toggle('is-active', active);
+			btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+		});
+		updateGalleryCounter(counter, safe, thumbs.length);
+		root._galleryIndex = safe;
+	}
+
+	function currentGalleryIndex(thumbs) {
+		for (var i = 0; i < thumbs.length; i++) {
+			if (thumbs[i].classList.contains('is-active') || thumbs[i].getAttribute('aria-pressed') === 'true') {
+				return i;
+			}
+		}
+		return 0;
 	}
 
 	function initGallery(root) {
-		var main = root.querySelector('[data-gallery-main], .product-gallery-main img');
-		var thumbs = root.querySelectorAll('[data-gallery-thumb]');
-		if (!main || !thumbs.length) {
+		if (typeof window.fashionBrandThemeInitProductGallery === 'function') {
+			window.fashionBrandThemeInitProductGallery(root);
 			return;
 		}
 
-		thumbs.forEach(function (thumb) {
+		var main = root.querySelector('[data-gallery-main], .product-gallery-main img');
+		var thumbs = Array.prototype.slice.call(root.querySelectorAll('[data-gallery-thumb]'));
+		var counter = root.querySelector('[data-gallery-counter]');
+		var prev = root.querySelector('[data-gallery-prev]');
+		var next = root.querySelector('[data-gallery-next]');
+		var stage = root.querySelector('.product-gallery-main');
+
+		if (!main) {
+			return;
+		}
+
+		root._galleryIndex = currentGalleryIndex(thumbs);
+		if (thumbs.length) {
+			updateGalleryCounter(counter, root._galleryIndex, thumbs.length);
+		}
+
+		thumbs.forEach(function (thumb, index) {
 			thumb.addEventListener('click', function () {
-				var src = thumb.getAttribute('data-image-src');
-				var srcset = thumb.getAttribute('data-image-srcset');
-				if (!src) {
-					return;
-				}
-				setMainImage(main, src, srcset);
-				thumbs.forEach(function (btn) {
-					btn.classList.remove('is-active');
-					btn.setAttribute('aria-pressed', 'false');
-				});
-				thumb.classList.add('is-active');
-				thumb.setAttribute('aria-pressed', 'true');
+				goToGalleryIndex(root, main, thumbs, counter, index);
 			});
 		});
+
+		if (prev) {
+			prev.addEventListener('click', function (event) {
+				event.preventDefault();
+				goToGalleryIndex(root, main, thumbs, counter, (root._galleryIndex || 0) - 1);
+			});
+		}
+
+		if (next) {
+			next.addEventListener('click', function (event) {
+				event.preventDefault();
+				goToGalleryIndex(root, main, thumbs, counter, (root._galleryIndex || 0) + 1);
+			});
+		}
+
+		if (!stage || thumbs.length < 2) {
+			return;
+		}
+
+		var touchStartX = 0;
+		var touchStartY = 0;
+		var tracking = false;
+
+		stage.addEventListener(
+			'touchstart',
+			function (event) {
+				if (!event.changedTouches || !event.changedTouches.length) {
+					return;
+				}
+				tracking = true;
+				touchStartX = event.changedTouches[0].clientX;
+				touchStartY = event.changedTouches[0].clientY;
+			},
+			{ passive: true }
+		);
+
+		stage.addEventListener(
+			'touchend',
+			function (event) {
+				if (!tracking || !event.changedTouches || !event.changedTouches.length) {
+					return;
+				}
+				tracking = false;
+				var dx = event.changedTouches[0].clientX - touchStartX;
+				var dy = event.changedTouches[0].clientY - touchStartY;
+				if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) {
+					return;
+				}
+				if (dx < 0) {
+					goToGalleryIndex(root, main, thumbs, counter, (root._galleryIndex || 0) + 1);
+				} else {
+					goToGalleryIndex(root, main, thumbs, counter, (root._galleryIndex || 0) - 1);
+				}
+			},
+			{ passive: true }
+		);
 	}
 
 	function getProductVariations(form) {
@@ -380,6 +484,45 @@
 		});
 	}
 
+	function initMobileBack() {
+		document.addEventListener('click', function (event) {
+			var btn = event.target.closest('[data-product-back]');
+			if (!btn) {
+				return;
+			}
+			event.preventDefault();
+			if (window.history.length > 1) {
+				window.history.back();
+				return;
+			}
+			var shopUrl = btn.getAttribute('data-shop-url');
+			if (shopUrl) {
+				window.location.href = shopUrl;
+			}
+		});
+	}
+
+	function initAccordions() {
+		document.querySelectorAll('[data-accordion-trigger]').forEach(function (trigger) {
+			trigger.addEventListener('click', function () {
+				var panel = trigger.parentElement
+					? trigger.parentElement.querySelector('[data-accordion-panel]')
+					: null;
+				if (!panel) {
+					return;
+				}
+				var willOpen = trigger.getAttribute('aria-expanded') !== 'true';
+				trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+				trigger.classList.toggle('is-open', willOpen);
+				if (willOpen) {
+					panel.hidden = false;
+				} else {
+					panel.hidden = true;
+				}
+			});
+		});
+	}
+
 	function boot() {
 		document.querySelectorAll('[data-product-gallery]').forEach(function (root) {
 			initGallery(root);
@@ -390,6 +533,8 @@
 		initStickyAtc();
 		initSizeGuide();
 		initShare();
+		initMobileBack();
+		initAccordions();
 	}
 
 	if (document.readyState === 'loading') {

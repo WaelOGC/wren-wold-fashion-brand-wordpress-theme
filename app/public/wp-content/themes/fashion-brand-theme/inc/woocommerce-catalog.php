@@ -744,3 +744,28 @@ function fashion_brand_theme_attribute_label_size_guide( $label, $name ) {
 	return $label;
 }
 add_filter( 'woocommerce_attribute_label', 'fashion_brand_theme_attribute_label_size_guide', 10, 2 );
+
+/**
+ * Redirect "Buy it now" submits straight to checkout.
+ *
+ * @param string $url Default redirect URL.
+ * @return string
+ */
+function fashion_brand_theme_buy_now_redirect( $url ) {
+	if ( ! isset( $_REQUEST['buy_now'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return $url;
+	}
+
+	$flag = sanitize_text_field( wp_unslash( $_REQUEST['buy_now'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( '1' !== $flag ) {
+		return $url;
+	}
+
+	if ( function_exists( 'wc_get_checkout_url' ) ) {
+		return wc_get_checkout_url();
+	}
+
+	return $url;
+}
+add_filter( 'woocommerce_add_to_cart_redirect', 'fashion_brand_theme_buy_now_redirect' );
+

@@ -9,9 +9,35 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FASHION_BRAND_THEME_VERSION', '0.4.36' );
+define( 'FASHION_BRAND_THEME_VERSION', '0.4.37' );
 define( 'FASHION_BRAND_THEME_DIR', get_template_directory() );
 define( 'FASHION_BRAND_THEME_URI', get_template_directory_uri() );
+
+/**
+ * Enqueue product gallery script on single product pages (before product.js).
+ *
+ * @return void
+ */
+function fashion_brand_theme_enqueue_product_gallery_script() {
+	if ( ! function_exists( 'is_product' ) || ! is_product() ) {
+		return;
+	}
+
+	wp_enqueue_script(
+		'fashion-brand-theme-product-gallery',
+		FASHION_BRAND_THEME_URI . '/assets/js/product-gallery.js',
+		array(),
+		FASHION_BRAND_THEME_VERSION,
+		true
+	);
+
+	// Make product.js depend on the gallery helper when both are registered.
+	$scripts = wp_scripts();
+	if ( isset( $scripts->registered['fashion-brand-theme-product'] ) ) {
+		$scripts->registered['fashion-brand-theme-product']->deps[] = 'fashion-brand-theme-product-gallery';
+	}
+}
+add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_enqueue_product_gallery_script', 30 );
 
 /**
  * Configure PHPMailer to send via Hostinger SMTP when credentials are defined.
