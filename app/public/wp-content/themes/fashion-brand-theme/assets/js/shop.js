@@ -1,12 +1,11 @@
 /**
- * Shop interactions: view toggle, wishlist, quick view, filters labels.
+ * Shop interactions: wishlist, quick view, filters drawer, price labels.
  *
  * @package Fashion_Brand_Theme
  */
 (function () {
 	'use strict';
 
-	var VIEW_KEY = 'wren_shop_view';
 	var WISH_KEY = 'wren_wishlist';
 
 	function getWishlist() {
@@ -29,34 +28,6 @@
 			btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 			btn.classList.toggle('is-active', on);
 		});
-	}
-
-	function initViewToggle() {
-		var main = document.querySelector('.shop-main');
-		var buttons = document.querySelectorAll('[data-shop-view]');
-		if (!main || !buttons.length) {
-			return;
-		}
-
-		var saved = localStorage.getItem(VIEW_KEY) || 'grid';
-		applyView(saved);
-
-		buttons.forEach(function (btn) {
-			btn.addEventListener('click', function () {
-				applyView(btn.getAttribute('data-shop-view'));
-			});
-		});
-
-		function applyView(view) {
-			view = view === 'list' ? 'list' : 'grid';
-			main.classList.toggle('is-list-view', view === 'list');
-			localStorage.setItem(VIEW_KEY, view);
-			buttons.forEach(function (btn) {
-				var active = btn.getAttribute('data-shop-view') === view;
-				btn.classList.toggle('is-active', active);
-				btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-			});
-		}
 	}
 
 	function initWishlist() {
@@ -160,6 +131,18 @@
 			return currency + '\u00a0' + Number(n).toFixed(0);
 		}
 
+		function syncTrack() {
+			var min = Number(minInput.value);
+			var max = Number(maxInput.value);
+			var rangeMin = Number(root.getAttribute('data-min')) || 0;
+			var rangeMax = Number(root.getAttribute('data-max')) || 100;
+			var span = rangeMax - rangeMin || 1;
+			var left = ((min - rangeMin) / span) * 100;
+			var right = ((max - rangeMin) / span) * 100;
+			root.style.setProperty('--price-left', left + '%');
+			root.style.setProperty('--price-right', right + '%');
+		}
+
 		function sync() {
 			var min = Number(minInput.value);
 			var max = Number(maxInput.value);
@@ -169,75 +152,66 @@
 			}
 			minLabel.textContent = format(min);
 			maxLabel.textContent = format(max);
+			syncTrack();
 		}
 
 		minInput.addEventListener('input', sync);
 		maxInput.addEventListener('input', sync);
+		sync();
 	}
 
 	function initFiltersDrawer() {
-		var toggle = document.querySelector('[data-shop-filters-toggle]');
 		var sidebar = document.querySelector('[data-shop-sidebar]');
-		if (!toggle || !sidebar) {
+		if (!sidebar) {
 			return;
 		}
 
-		function setOpen(open) {
+		var openButtons = document.querySelectorAll('[data-shop-filters-open]');
+
+		function setOpen(open, focusGroup) {
 			document.body.classList.toggle('shop-filters-open', open);
 			sidebar.classList.toggle('is-open', open);
-			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			openButtons.forEach(function (btn) {
+				btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+			});
 			document.body.style.overflow = open ? 'hidden' : '';
+
+			if (open && focusGroup) {
+				var group = sidebar.querySelector('[data-shop-filter-group="' + focusGroup + '"]');
+				if (group) {
+					window.requestAnimationFrame(function () {
+						group.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					});
+				}
+			}
 		}
 
-		toggle.addEventListener('click', function () {
-			setOpen(!sidebar.classList.contains('is-open'));
-		});
-
 		document.addEventListener('click', function (event) {
+			var openBtn = event.target.closest('[data-shop-filters-open]');
+			if (openBtn) {
+				event.preventDefault();
+				var group = openBtn.getAttribute('data-shop-filters-open') || '';
+				setOpen(true, group);
+				return;
+			}
+
 			if (event.target.closest('[data-shop-filters-close]')) {
 				setOpen(false);
 			}
 		});
 
 		document.addEventListener('keydown', function (event) {
-			if (event.key === 'Escape') {
+			if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
 				setOpen(false);
 			}
-		});
-
-		window.addEventListener('resize', function () {
-			if (window.matchMedia('(min-width: 901px)').matches) {
-				setOpen(false);
-			}
-		});
-	}
-
-	function initCategorySublists() {
-		document.addEventListener('click', function (event) {
-			var btn = event.target.closest('.shop-filters__toggle');
-			if (!btn) {
-				return;
-			}
-
-			var sublistId = btn.getAttribute('aria-controls');
-			var sublist = sublistId ? document.getElementById(sublistId) : null;
-			if (!sublist) {
-				return;
-			}
-
-			var willOpen = !sublist.classList.contains('is-open');
-			sublist.classList.toggle('is-open', willOpen);
-			btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 		});
 	}
 
 	function boot() {
-		initViewToggle();
 		initWishlist();
 		initQuickView();
 		initPriceLabels();
 		initFiltersDrawer();
-		initCategorySublists();
 	}
 
 	if (document.readyState === 'loading') {

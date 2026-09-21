@@ -69,9 +69,11 @@ function fashion_brand_theme_woocommerce_hooks() {
 	remove_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
 	remove_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
 
-	// Custom toolbar renders count + ordering.
+	// Custom shop bar renders count + ordering.
 	remove_action( 'woocommerce_before_shop_loop', 'woocommerce_result_count', 20 );
 	remove_action( 'woocommerce_before_shop_loop', 'woocommerce_catalog_ordering', 30 );
+
+	add_filter( 'woocommerce_catalog_orderby', 'fashion_brand_theme_catalog_orderby_labels' );
 
 	// Custom breadcrumbs on product + archive templates.
 	remove_action( 'woocommerce_before_main_content', 'woocommerce_breadcrumb', 20 );
@@ -100,6 +102,20 @@ function fashion_brand_theme_loop_shop_columns() {
 	return 4;
 }
 add_filter( 'loop_shop_columns', 'fashion_brand_theme_loop_shop_columns', 30 );
+
+/**
+ * Rename default catalog orderby label to Featured.
+ *
+ * @param array $options Orderby options.
+ * @return array
+ */
+function fashion_brand_theme_catalog_orderby_labels( $options ) {
+	if ( isset( $options['menu_order'] ) ) {
+		$options['menu_order'] = __( 'Featured', 'fashion-brand-theme' );
+	}
+
+	return $options;
+}
 
 /**
  * Body class for shop/product templates.
