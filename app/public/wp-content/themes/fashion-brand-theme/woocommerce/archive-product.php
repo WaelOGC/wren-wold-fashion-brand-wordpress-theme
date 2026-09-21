@@ -19,7 +19,22 @@ do_action( 'woocommerce_before_main_content' );
 <section id="shop-view" class="shop-view">
 	<header class="shop-intro">
 		<?php if ( apply_filters( 'woocommerce_show_page_title', true ) ) : ?>
-			<h1 class="shop-intro__title"><?php woocommerce_page_title(); ?></h1>
+			<?php
+			$intro_icon_svg = '';
+			if ( is_product_category() ) {
+				$queried = get_queried_object();
+				if ( $queried instanceof WP_Term && function_exists( 'fashion_brand_theme_get_category_icon_key' ) ) {
+					$intro_icon_key = fashion_brand_theme_get_category_icon_key( (int) $queried->term_id );
+					$intro_icon_svg = fashion_brand_theme_get_category_icon_svg( $intro_icon_key );
+				}
+			}
+			?>
+			<div class="shop-intro__heading">
+				<?php if ( $intro_icon_svg ) : ?>
+					<span class="shop-intro__icon" aria-hidden="true"><?php echo $intro_icon_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted inline SVG from theme definitions. ?></span>
+				<?php endif; ?>
+				<h1 class="shop-intro__title"><?php woocommerce_page_title(); ?></h1>
+			</div>
 		<?php endif; ?>
 		<?php do_action( 'woocommerce_archive_description' ); ?>
 	</header>

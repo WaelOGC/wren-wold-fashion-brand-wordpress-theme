@@ -323,6 +323,101 @@ function fashion_brand_theme_ensure_product_subcategories() {
 add_action( 'init', 'fashion_brand_theme_ensure_product_subcategories', 20 );
 
 /**
+ * Backfill description + Yoast SEO for original product categories.
+ *
+ * Only fills terms whose description is still empty, so re-runs and manual
+ * owner edits are left untouched. Yoast uses WPSEO_Taxonomy_Meta::set_values().
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_product_category_seo() {
+	if ( ! taxonomy_exists( 'product_cat' ) ) {
+		return;
+	}
+
+	$categories = array(
+		't-shirts' => array(
+			'description' => 'Everyday T-shirts in soft, breathable cotton, made for effortless year-round wear.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's t-shirts",
+				'wpseo_title'   => "Women's T-Shirts | WREN WOLD",
+				'wpseo_desc'    => "Shop women's T-shirts at WREN WOLD — soft, breathable cotton made for everyday wear.",
+			),
+		),
+		'hoodies'  => array(
+			'description' => 'Relaxed hoodies in cozy fabrics, built for easy layering and off-duty comfort.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's hoodies",
+				'wpseo_title'   => "Women's Hoodies | WREN WOLD",
+				'wpseo_desc'    => "Shop women's hoodies at WREN WOLD — cozy layers built for easy, off-duty comfort.",
+			),
+		),
+		'knitwear' => array(
+			'description' => 'Soft knitwear pieces made for layering and warmth through the cooler seasons.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's knitwear",
+				'wpseo_title'   => "Women's Knitwear | WREN WOLD",
+				'wpseo_desc'    => "Shop women's knitwear at WREN WOLD — soft layers made for warmth all season.",
+			),
+		),
+		'shirts'   => array(
+			'description' => 'Tailored shirts in clean cuts, versatile enough for the office or weekends.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's shirts",
+				'wpseo_title'   => "Women's Shirts | WREN WOLD",
+				'wpseo_desc'    => "Shop women's shirts at WREN WOLD — tailored cuts for the office or weekends.",
+			),
+		),
+		'pants'    => array(
+			'description' => 'Versatile pants in tailored and relaxed cuts, built for work, travel, and everyday wear.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's pants",
+				'wpseo_title'   => "Women's Pants | WREN WOLD",
+				'wpseo_desc'    => "Shop women's pants at WREN WOLD — tailored and relaxed cuts for everyday wear.",
+			),
+		),
+		'dresses'  => array(
+			'description' => 'Dresses for every occasion, from easy daily wear to elegant evening styles.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's dresses",
+				'wpseo_title'   => "Women's Dresses | WREN WOLD",
+				'wpseo_desc'    => "Shop women's dresses at WREN WOLD — daily, evening, and formal styles in one place.",
+			),
+		),
+	);
+
+	foreach ( $categories as $slug => $category ) {
+		$term = get_term_by( 'slug', $slug, 'product_cat' );
+		if ( ! $term || is_wp_error( $term ) ) {
+			continue;
+		}
+
+		if ( '' !== trim( (string) $term->description ) ) {
+			continue;
+		}
+
+		$term_id = (int) $term->term_id;
+
+		$updated = wp_update_term(
+			$term_id,
+			'product_cat',
+			array(
+				'description' => $category['description'],
+			)
+		);
+
+		if ( is_wp_error( $updated ) ) {
+			continue;
+		}
+
+		if ( class_exists( 'WPSEO_Taxonomy_Meta' ) ) {
+			WPSEO_Taxonomy_Meta::set_values( $term_id, 'product_cat', $category['yoast'] );
+		}
+	}
+}
+add_action( 'init', 'fashion_brand_theme_ensure_product_category_seo', 21 );
+
+/**
  * Ensure the Contact page exists for nav and page-contact.php.
  *
  * @return void

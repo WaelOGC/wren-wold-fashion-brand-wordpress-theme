@@ -48,6 +48,53 @@ function fashion_brand_theme_get_product_category_slugs() {
 }
 
 /**
+ * Nested shop category tree for the sidebar filter (top-level + children).
+ *
+ * Preserves canonical top-level order from fashion_brand_theme_get_product_category_slugs().
+ * Children are ordered by name; empty when a parent has none or the term is missing.
+ *
+ * @return array<string, array{label: string, term_id: int, children: array<string, string>}>
+ */
+function fashion_brand_theme_get_shop_category_tree() {
+	$tree = array();
+
+	foreach ( fashion_brand_theme_get_product_category_slugs() as $slug => $label ) {
+		$children = array();
+		$term_id  = 0;
+
+		if ( taxonomy_exists( 'product_cat' ) ) {
+			$term = get_term_by( 'slug', $slug, 'product_cat' );
+
+			if ( $term && ! is_wp_error( $term ) ) {
+				$term_id     = (int) $term->term_id;
+				$child_terms = get_terms(
+					array(
+						'taxonomy'   => 'product_cat',
+						'parent'     => $term_id,
+						'hide_empty' => false,
+						'orderby'    => 'name',
+					)
+				);
+
+				if ( ! is_wp_error( $child_terms ) && ! empty( $child_terms ) ) {
+					foreach ( $child_terms as $child ) {
+						$children[ $child->slug ] = $child->name;
+					}
+				}
+			}
+		}
+
+		$tree[ $slug ] = array(
+			'label'    => $label,
+			'term_id'  => $term_id,
+			'children' => $children,
+		);
+	}
+
+	return $tree;
+}
+
+/**
  * Active product-tag collections for navigation and the Collections page.
  *
  * Only tags opted in via `_fbt_show_in_collections` with at least one product.

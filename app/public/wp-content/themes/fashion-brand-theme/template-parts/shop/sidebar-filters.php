@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$categories = fashion_brand_theme_get_product_category_slugs();
+$categories = fashion_brand_theme_get_shop_category_tree();
 $active     = fashion_brand_theme_get_active_filters();
 $range      = fashion_brand_theme_get_catalog_price_range();
 $min_val    = null !== $active['min_price'] ? $active['min_price'] : $range['min'];
@@ -38,12 +38,61 @@ $action = fashion_brand_theme_get_clear_filters_url();
 		<div class="shop-filters__group">
 			<h2 class="shop-filters__title"><?php esc_html_e( 'Category', 'fashion-brand-theme' ); ?></h2>
 			<ul class="shop-filters__list">
-				<?php foreach ( $categories as $slug => $label ) : ?>
-					<li>
-						<label class="shop-filters__check">
-							<input type="checkbox" name="filter_cat[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( in_array( $slug, $active['cats'], true ) ); ?> />
-							<span><?php echo esc_html( $label ); ?></span>
-						</label>
+				<?php foreach ( $categories as $slug => $category ) : ?>
+					<?php
+					$label      = $category['label'];
+					$term_id    = isset( $category['term_id'] ) ? (int) $category['term_id'] : 0;
+					$children   = $category['children'];
+					$has_kids   = ! empty( $children );
+					$sublist_id = $has_kids ? 'shop-filter-cat-' . sanitize_html_class( $slug ) : '';
+					$icon_svg   = '';
+
+					if ( $term_id > 0 && function_exists( 'fashion_brand_theme_get_category_icon_key' ) ) {
+						$icon_key = fashion_brand_theme_get_category_icon_key( $term_id );
+						$icon_svg = fashion_brand_theme_get_category_icon_svg( $icon_key );
+					}
+					?>
+					<li class="<?php echo $has_kids ? 'shop-filters__item shop-filters__item--has-children' : 'shop-filters__item'; ?>">
+						<div class="shop-filters__row">
+							<label class="shop-filters__check">
+								<input type="checkbox" name="filter_cat[]" value="<?php echo esc_attr( $slug ); ?>" <?php checked( in_array( $slug, $active['cats'], true ) ); ?> />
+								<?php if ( $icon_svg ) : ?>
+									<span class="shop-filters__cat-icon" aria-hidden="true"><?php echo $icon_svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Trusted inline SVG from theme definitions. ?></span>
+								<?php endif; ?>
+								<span><?php echo esc_html( $label ); ?></span>
+							</label>
+							<?php if ( $has_kids ) : ?>
+								<button
+									type="button"
+									class="shop-filters__toggle"
+									aria-expanded="false"
+									aria-controls="<?php echo esc_attr( $sublist_id ); ?>"
+									aria-label="<?php
+									echo esc_attr(
+										sprintf(
+											/* translators: %s: parent category label. */
+											__( 'Toggle %s subcategories', 'fashion-brand-theme' ),
+											$label
+										)
+									);
+									?>"
+								>
+									<span class="shop-filters__toggle-icon" aria-hidden="true"></span>
+								</button>
+							<?php endif; ?>
+						</div>
+						<?php if ( $has_kids ) : ?>
+							<ul id="<?php echo esc_attr( $sublist_id ); ?>" class="shop-filters__sublist">
+								<?php foreach ( $children as $child_slug => $child_name ) : ?>
+									<li>
+										<label class="shop-filters__check">
+											<input type="checkbox" name="filter_cat[]" value="<?php echo esc_attr( $child_slug ); ?>" <?php checked( in_array( $child_slug, $active['cats'], true ) ); ?> />
+											<span><?php echo esc_html( $child_name ); ?></span>
+										</label>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						<?php endif; ?>
 					</li>
 				<?php endforeach; ?>
 			</ul>

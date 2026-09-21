@@ -212,12 +212,32 @@
 		});
 	}
 
+	function initCategorySublists() {
+		document.addEventListener('click', function (event) {
+			var btn = event.target.closest('.shop-filters__toggle');
+			if (!btn) {
+				return;
+			}
+
+			var sublistId = btn.getAttribute('aria-controls');
+			var sublist = sublistId ? document.getElementById(sublistId) : null;
+			if (!sublist) {
+				return;
+			}
+
+			var willOpen = !sublist.classList.contains('is-open');
+			sublist.classList.toggle('is-open', willOpen);
+			btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+		});
+	}
+
 	function boot() {
 		initViewToggle();
 		initWishlist();
 		initQuickView();
 		initPriceLabels();
 		initFiltersDrawer();
+		initCategorySublists();
 	}
 
 	if (document.readyState === 'loading') {
