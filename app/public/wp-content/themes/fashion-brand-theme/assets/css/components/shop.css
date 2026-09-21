@@ -44,6 +44,15 @@ body.tax-product_tag .site-content {
 	overflow: hidden;
 }
 
+.shop-hero__picture {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
 .shop-hero__image {
 	position: absolute;
 	inset: 0;
@@ -209,12 +218,13 @@ body.tax-product_tag .site-content {
 .shop-bar__pills {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
-	overflow-x: auto;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
+	row-gap: 8px;
+	overflow: visible;
 	order: 1;
 	min-width: 0;
+	flex: 1 1 auto;
 }
 
 .shop-bar__pills::-webkit-scrollbar {
@@ -226,7 +236,7 @@ body.tax-product_tag .site-content {
 	align-items: center;
 	justify-content: center;
 	height: 32px;
-	padding: 0 16px;
+	padding: 0 14px;
 	border-radius: 999px;
 	background: var(--color-surface-muted);
 	color: var(--color-text);
@@ -239,6 +249,12 @@ body.tax-product_tag .site-content {
 	border: none;
 	flex-shrink: 0;
 	transition: background 0.2s ease, color 0.2s ease;
+}
+
+@media (max-width: 1480px) and (min-width: 901px) {
+	.shop-bar__pill {
+		padding: 0 12px;
+	}
 }
 
 .shop-bar__pill:hover {
@@ -355,16 +371,20 @@ body.tax-product_tag .site-content {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	margin: 0;
 }
 
 .shop-bar__sort-label {
 	font-family: var(--font-family-base);
 	font-size: 13px;
+	line-height: 1.2;
 	color: var(--color-muted);
 	white-space: nowrap;
 }
 
 .shop-bar__sort .woocommerce-ordering {
+	display: flex;
+	align-items: center;
 	margin: 0;
 }
 
@@ -374,6 +394,8 @@ body.tax-product_tag .site-content {
 	-webkit-appearance: none;
 	min-height: 0;
 	min-width: 0;
+	width: auto;
+	field-sizing: content;
 	height: auto;
 	padding: 0 18px 0 0;
 	border: none;
@@ -386,6 +408,7 @@ body.tax-product_tag .site-content {
 	font-family: var(--font-family-display);
 	font-size: 13px;
 	font-weight: 400;
+	line-height: 1.2;
 	color: var(--color-text);
 	cursor: pointer;
 	box-shadow: none;
@@ -558,13 +581,28 @@ ul.products.shop-grid li.product {
 	margin: 0;
 }
 
-.product-card-img.hover-img {
+/* Beat WooCommerce `.woocommerce ul.products li.product a img { height:auto; margin-bottom:1em }` */
+.woocommerce ul.products.shop-grid li.product .product-card-img-wrap img.product-card-img {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	margin: 0;
+	object-fit: cover;
+	object-position: center;
+	display: block;
+}
+
+.product-card-img.hover-img,
+.woocommerce ul.products.shop-grid li.product .product-card-img-wrap img.product-card-img.hover-img {
 	opacity: 0;
 	transition: opacity 0.35s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
-	.product-card__media:hover .product-card-img.hover-img {
+	.product-card__media:hover .product-card-img.hover-img,
+	.woocommerce ul.products.shop-grid li.product .product-card__media:hover .product-card-img-wrap img.product-card-img.hover-img {
 		opacity: 1;
 	}
 }
@@ -1332,6 +1370,10 @@ a.product-card__cart.button:hover {
 	.shop-bar__pills {
 		order: 1;
 		flex: 1;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
 	}
 
 	.shop-bar__pill {

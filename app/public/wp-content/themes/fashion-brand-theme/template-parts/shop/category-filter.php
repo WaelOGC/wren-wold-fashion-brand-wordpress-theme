@@ -35,7 +35,7 @@ if ( is_wp_error( $terms ) || empty( $terms ) ) {
 // When viewing a parent with no children, nothing to show (handled above).
 // When on /shop/, this template is not called with a category — already returned.
 ?>
-<nav class="shop-subcats container" aria-label="<?php esc_attr_e( 'Subcategories', 'fashion-brand-theme' ); ?>">
+<nav class="shop-subcats container container--wide" aria-label="<?php esc_attr_e( 'Subcategories', 'fashion-brand-theme' ); ?>">
 	<?php foreach ( $terms as $sub ) : ?>
 		<?php
 		$url       = get_term_link( $sub );

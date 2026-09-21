@@ -15,10 +15,10 @@ get_header( 'shop' );
  */
 do_action( 'woocommerce_before_main_content' );
 
-$hero_rel      = 'assets/images/shop-photography/hero-shop.jpg';
-$hero_path     = get_theme_file_path( $hero_rel );
-$hero_uri      = file_exists( $hero_path ) ? get_theme_file_uri( $hero_rel ) : '';
-$cat_desc      = '';
+$hero_images = fashion_brand_theme_get_shop_hero_images();
+$hero_desktop = isset( $hero_images['desktop'] ) ? $hero_images['desktop'] : '';
+$hero_mobile  = isset( $hero_images['mobile'] ) ? $hero_images['mobile'] : '';
+$cat_desc       = '';
 $is_product_cat = is_product_category();
 
 if ( $is_product_cat ) {
@@ -31,18 +31,21 @@ if ( $is_product_cat ) {
 
 <section id="shop-view" class="shop-view">
 	<header class="shop-hero">
-		<?php if ( $hero_uri ) : ?>
-			<img
-				class="shop-hero__image"
-				src="<?php echo esc_url( $hero_uri ); ?>"
-				alt=""
-				loading="eager"
-				fetchpriority="high"
-				decoding="async"
-			/>
+		<?php if ( $hero_desktop ) : ?>
+			<picture class="shop-hero__picture">
+				<source media="(max-width: 900px)" srcset="<?php echo esc_url( $hero_mobile ? $hero_mobile : $hero_desktop ); ?>" />
+				<img
+					class="shop-hero__image"
+					src="<?php echo esc_url( $hero_desktop ); ?>"
+					alt=""
+					loading="eager"
+					fetchpriority="high"
+					decoding="async"
+				/>
+			</picture>
 		<?php endif; ?>
 
-		<div class="shop-hero__inner container">
+		<div class="shop-hero__inner container container--wide">
 			<div class="shop-hero__copy">
 				<p class="shop-hero__eyebrow"><?php esc_html_e( 'Timeless essentials', 'fashion-brand-theme' ); ?></p>
 
@@ -80,7 +83,7 @@ if ( $is_product_cat ) {
 
 	<?php get_template_part( 'template-parts/shop/category', 'filter' ); ?>
 
-	<div class="shop-main container">
+	<div class="shop-main container container--wide">
 		<?php if ( woocommerce_product_loop() ) : ?>
 			<?php do_action( 'woocommerce_before_shop_loop' ); ?>
 

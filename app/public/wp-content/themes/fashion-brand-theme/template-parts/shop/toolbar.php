@@ -19,7 +19,7 @@ if ( null !== $active['min_price'] || null !== $active['max_price'] ) {
 
 $total = (int) wc_get_loop_prop( 'total' );
 ?>
-<div class="shop-bar container">
+<div class="shop-bar container container--wide">
 	<div class="shop-bar__start">
 		<nav class="shop-bar__pills" aria-label="<?php esc_attr_e( 'Product categories', 'fashion-brand-theme' ); ?>">
 			<a
