@@ -51,9 +51,27 @@
 			return;
 		}
 
+		const wasOpen = navigation.classList.contains( 'is-open' );
+
 		navigation.classList.remove( 'is-open' );
 		document.body.classList.remove( 'is-header-nav-open' );
 		setExpanded( menuToggle, false );
+
+		if ( wasOpen && usesCompactNavigation() ) {
+			menuToggle.focus();
+		}
+	}
+
+	function focusFirstNavLink() {
+		if ( ! navigation || ! usesCompactNavigation() ) {
+			return;
+		}
+
+		const firstLink = navigation.querySelector( '.primary-menu > .menu-item > a' );
+
+		if ( firstLink ) {
+			firstLink.focus();
+		}
 	}
 
 	function closeSearchPanel() {
@@ -128,11 +146,12 @@
 				navigation.classList.add( 'is-open' );
 				document.body.classList.add( 'is-header-nav-open' );
 				setExpanded( menuToggle, true );
+				updateHeaderOffset();
+				focusFirstNavLink();
 			} else {
 				closeNavigation();
+				updateHeaderOffset();
 			}
-
-			updateHeaderOffset();
 		} );
 	}
 
