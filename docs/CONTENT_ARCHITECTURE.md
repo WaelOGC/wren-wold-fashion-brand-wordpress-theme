@@ -52,8 +52,11 @@ Home
 │   ├── Hoodies
 │   ├── Knitwear
 │   ├── Shirts
+│   ├── Blouses
 │   ├── Pants
-│   └── Dresses
+│   ├── Skirts
+│   ├── Dresses
+│   └── Coats
 │
 ├── Collections
 │   ├── Everyday Essentials
@@ -80,6 +83,15 @@ Utility Navigation:
 > Shirts/Knitwear/T-Shirts). "Everyday Essentials" and "Occasion / Evening
 > Wear" moved under **Collections**, implemented as WooCommerce product tags
 > (cross-category, non-exclusive groupings) rather than product categories.
+
+> **Resolved 2026-09-21:** Added three new Shop categories — Blouses, Skirts,
+> and Coats — after full analysis of the Matterhorn supplier feed showed
+> these are genuinely distinct garment types with meaningful product volume,
+> not redundant with existing categories. "Tops" remains intentionally
+> excluded (per the 2026-08-27 resolution above) — general t-shirts and
+> bodysuits fold into the existing T-Shirts category instead. Full
+> category-to-supplier-feed mapping is documented in the wren-wold-ai-agent
+> plugin repo, docs/04-decisions.md.
 
 ---
 
@@ -119,8 +131,11 @@ Approved shop categories (garment type — WooCommerce product categories):
 - Hoodies
 - Knitwear
 - Shirts
+- Blouses
 - Pants
+- Skirts
 - Dresses
+- Coats
 
 These categories live under Shop and are used for product discovery and archive pages. This taxonomy is garment-type only; occasion-based groupings do not belong here (see Section 6a).
 
