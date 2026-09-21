@@ -70,13 +70,13 @@ if ( $is_product_cat ) {
 					<span class="shop-hero__rule-label shop-hero__rule-label--mobile"><?php esc_html_e( 'Clothing with intention', 'fashion-brand-theme' ); ?></span>
 				</div>
 			</div>
-
-			<p class="shop-hero__script" aria-hidden="true">
-				<span>More</span>
-				<span>than</span>
-				<span>clothes</span>
-			</p>
 		</div>
+
+		<p class="shop-hero__script" aria-hidden="true">
+			<span>More</span>
+			<span>than</span>
+			<span>clothes</span>
+		</p>
 	</header>
 
 	<?php get_template_part( 'template-parts/shop/toolbar' ); ?>

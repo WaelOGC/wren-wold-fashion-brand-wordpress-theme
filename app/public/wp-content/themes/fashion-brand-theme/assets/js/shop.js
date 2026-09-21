@@ -18,6 +18,11 @@
 
 	function setWishlist(ids) {
 		localStorage.setItem(WISH_KEY, JSON.stringify(ids));
+		try {
+			document.dispatchEvent(new CustomEvent('wren:wishlist-changed'));
+		} catch (e) {
+			/* ignore */
+		}
 	}
 
 	function syncWishlistButtons() {

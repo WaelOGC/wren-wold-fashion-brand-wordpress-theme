@@ -12,6 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</div><!-- #content -->
 
 	<?php fashion_brand_theme_footer(); ?>
+	<?php get_template_part( 'template-parts/global/mobile', 'bottom-nav' ); ?>
 </div><!-- #page -->
 <?php wp_footer(); ?>
 </body>

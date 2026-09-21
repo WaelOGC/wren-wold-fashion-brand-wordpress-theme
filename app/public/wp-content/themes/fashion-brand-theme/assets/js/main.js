@@ -254,4 +254,34 @@
 			{ passive: true }
 		);
 	}
+
+	function getWishlistIds() {
+		try {
+			return JSON.parse( localStorage.getItem( 'wren_wishlist' ) || '[]' );
+		} catch ( e ) {
+			return [];
+		}
+	}
+
+	function syncMobileWishlistBadge() {
+		const badges = document.querySelectorAll( '[data-wishlist-count]' );
+		if ( ! badges.length ) {
+			return;
+		}
+
+		const count = getWishlistIds().length;
+
+		badges.forEach( function ( badge ) {
+			badge.textContent = String( count );
+			if ( count > 0 ) {
+				badge.removeAttribute( 'hidden' );
+			} else {
+				badge.setAttribute( 'hidden', '' );
+			}
+		} );
+	}
+
+	syncMobileWishlistBadge();
+	window.addEventListener( 'storage', syncMobileWishlistBadge );
+	document.addEventListener( 'wren:wishlist-changed', syncMobileWishlistBadge );
 }() );

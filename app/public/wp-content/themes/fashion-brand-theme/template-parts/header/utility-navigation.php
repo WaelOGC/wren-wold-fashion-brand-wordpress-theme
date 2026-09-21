@@ -48,7 +48,7 @@ if ( ! $show_search && ! $show_account && ! $show_cart ) {
 		<?php endif; ?>
 
 		<?php if ( $show_account ) : ?>
-			<li class="menu-item">
+			<li class="menu-item menu-item-account">
 				<a href="<?php echo esc_url( fashion_brand_theme_get_account_url() ); ?>" aria-label="<?php esc_attr_e( 'Account', 'fashion-brand-theme' ); ?>">
 					<svg class="utility-menu__icon" width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
 						<circle cx="12" cy="8" r="3.25" stroke="currentColor" stroke-width="1.25"/>
