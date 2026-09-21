@@ -13,10 +13,46 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Enqueue front-end assets.
  */
 function fashion_brand_theme_enqueue_assets() {
+	$stylesheets = array(
+		'tokens/colors',
+		'tokens/typography',
+		'tokens/spacing',
+		'tokens/layout',
+		'tokens/effects',
+		'base/fonts',
+		'base/reset',
+		'base/typography',
+		'base/buttons',
+		'base/utilities',
+		'components/header',
+		'components/announcement-bar',
+		'components/homepage',
+		'components/collections',
+		'components/shop',
+		'components/product',
+		'components/cart',
+		'components/checkout',
+	);
+
+	$previous_handle = null;
+
+	foreach ( $stylesheets as $stylesheet ) {
+		$handle = 'fashion-brand-theme-' . str_replace( '/', '-', $stylesheet );
+
+		wp_enqueue_style(
+			$handle,
+			FASHION_BRAND_THEME_URI . '/assets/css/' . $stylesheet . '.css',
+			null === $previous_handle ? array() : array( $previous_handle ),
+			FASHION_BRAND_THEME_VERSION
+		);
+
+		$previous_handle = $handle;
+	}
+
 	wp_enqueue_style(
 		'fashion-brand-theme-main',
 		FASHION_BRAND_THEME_URI . '/assets/css/main.css',
-		array(),
+		array( $previous_handle ),
 		FASHION_BRAND_THEME_VERSION
 	);
 

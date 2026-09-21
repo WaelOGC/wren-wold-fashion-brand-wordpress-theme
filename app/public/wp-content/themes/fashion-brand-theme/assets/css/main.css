@@ -5,24 +5,3 @@
  *
  * @package Fashion_Brand_Theme
  */
-
-@import url("tokens/colors.css");
-@import url("tokens/typography.css");
-@import url("tokens/spacing.css");
-@import url("tokens/layout.css");
-@import url("tokens/effects.css");
-
-@import url("base/fonts.css");
-@import url("base/reset.css");
-@import url("base/typography.css");
-@import url("base/buttons.css");
-@import url("base/utilities.css");
-
-@import url("components/header.css?ver=0.2.4");
-@import url("components/announcement-bar.css");
-@import url("components/homepage.css");
-@import url("components/collections.css?ver=0.3.0");
-@import url("components/shop.css?ver=0.2.12");
-@import url("components/product.css?ver=0.2.11");
-@import url("components/cart.css?ver=0.1.7");
-@import url("components/checkout.css?ver=0.1.0");
