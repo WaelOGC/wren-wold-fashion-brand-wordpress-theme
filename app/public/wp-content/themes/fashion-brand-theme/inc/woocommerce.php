@@ -363,7 +363,7 @@ add_action( 'woocommerce_before_cart_totals', 'fashion_brand_theme_cart_trust_li
  */
 function fashion_brand_theme_checkout_trust_row() {
 	echo '<p class="checkout-trust-row">';
-	echo '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+	echo fashion_brand_theme_get_icon( 'lock', array( 'width' => 14, 'height' => 14 ) );
 	echo '<span>' . esc_html__( 'Secure checkout', 'fashion-brand-theme' ) . '</span>';
 	echo '</p>';
 }

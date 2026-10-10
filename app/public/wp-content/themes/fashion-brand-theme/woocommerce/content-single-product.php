@@ -165,10 +165,10 @@ $shop_url     = fashion_brand_theme_get_shop_url();
 
 					<div class="product-atc-row__actions" aria-label="<?php esc_attr_e( 'Product actions', 'fashion-brand-theme' ); ?>">
 						<button type="button" class="product-icon-btn product-icon-btn--icon-only" data-wishlist-toggle data-product-id="<?php echo esc_attr( (string) $product->get_id() ); ?>" aria-pressed="false" aria-label="<?php esc_attr_e( 'Add to wishlist', 'fashion-brand-theme' ); ?>">
-							<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+							<?php echo fashion_brand_theme_get_icon( 'heart', array( 'width' => 18, 'height' => 18 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</button>
 						<button type="button" class="product-icon-btn product-icon-btn--icon-only" data-share-product aria-label="<?php esc_attr_e( 'Share', 'fashion-brand-theme' ); ?>">
-							<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 8a3 3 0 1 0-2.8-4H12a3 3 0 0 0 .2 4L8.7 12.2a3 3 0 1 0 1.4 1.4L14 9.4A3 3 0 0 0 15 8zm-9 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" fill="currentColor"/></svg>
+							<?php echo fashion_brand_theme_get_icon( 'share-2', array( 'width' => 18, 'height' => 18 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</button>
 					</div>
 				</div>
@@ -181,7 +181,7 @@ $shop_url     = fashion_brand_theme_get_shop_url();
 				<ul class="product-trust-badges" aria-label="<?php esc_attr_e( 'Purchase benefits', 'fashion-brand-theme' ); ?>">
 					<li class="product-trust-badges__item">
 						<span class="product-trust-badges__icon" aria-hidden="true">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M3 7h11v10H3V7zm11 3h4l3 3v4h-7V10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="18.5" r="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+							<?php echo fashion_brand_theme_get_icon( 'truck', array( 'width' => 20, 'height' => 20 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</span>
 						<span class="product-trust-badges__text">
 							<span class="product-trust-badges__label" title="<?php echo esc_attr( $shipping['shipping'] ); ?>"><?php echo esc_html( $shipping_label ); ?></span>
@@ -189,7 +189,7 @@ $shop_url     = fashion_brand_theme_get_shop_url();
 					</li>
 					<li class="product-trust-badges__item">
 						<span class="product-trust-badges__icon" aria-hidden="true">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M4 7h10a4 4 0 0 1 0 8H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 11 4 7l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							<?php echo fashion_brand_theme_get_icon( 'rotate-ccw', array( 'width' => 20, 'height' => 20 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</span>
 						<span class="product-trust-badges__text">
 							<span class="product-trust-badges__label" title="<?php echo esc_attr( $shipping['returns'] ); ?>"><?php echo esc_html( $returns_label ); ?></span>
@@ -199,7 +199,7 @@ $shop_url     = fashion_brand_theme_get_shop_url();
 					<?php if ( $is_organic ) : ?>
 						<li class="product-trust-badges__item">
 							<span class="product-trust-badges__icon" aria-hidden="true">
-								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" focusable="false"><path d="M12 21c0-7 4-11 9-12-1 6-5 10-9 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 21c0-7-4-11-9-12 1 6 5 10 9 12z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 21V11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+								<?php echo fashion_brand_theme_get_icon( 'leaf', array( 'width' => 20, 'height' => 20 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 							</span>
 							<span class="product-trust-badges__text">
 								<span class="product-trust-badges__label"><?php esc_html_e( 'Sustainable materials', 'fashion-brand-theme' ); ?></span>

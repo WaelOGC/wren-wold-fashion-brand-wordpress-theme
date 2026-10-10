@@ -38,7 +38,7 @@
 
 	function showCopied( button ) {
 		var defaultLabel = button.getAttribute( 'data-label-default' ) || button.textContent;
-		var copiedLabel = button.getAttribute( 'data-label-copied' ) || 'Copied';
+		var copiedLabel = button.getAttribute( 'data-label-copied' ) || 'Copied!';
 
 		button.textContent = copiedLabel;
 		button.classList.add( 'is-copied' );
@@ -51,7 +51,7 @@
 	}
 
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '[data-coupon-copy]' );
+		var button = event.target.closest( '[data-coupon-copy], .copy-btn[data-code]' );
 
 		if ( ! button ) {
 			return;
@@ -59,7 +59,10 @@
 
 		event.preventDefault();
 
-		var code = button.getAttribute( 'data-coupon-code' ) || '';
+		var code =
+			button.getAttribute( 'data-coupon-code' ) ||
+			button.getAttribute( 'data-code' ) ||
+			'';
 
 		if ( ! code ) {
 			return;

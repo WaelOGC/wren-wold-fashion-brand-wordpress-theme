@@ -57,9 +57,7 @@ $total = (int) wc_get_loop_prop( 'total' );
 			aria-expanded="false"
 			aria-controls="shop-sidebar-filters"
 		>
-			<svg class="shop-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-				<path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-			</svg>
+			<?php echo fashion_brand_theme_get_icon( 'sliders-horizontal', array( 'width' => 16, 'height' => 16, 'class' => 'shop-bar__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<span class="is-desktop"><?php esc_html_e( 'Filter', 'fashion-brand-theme' ); ?></span>
 			<span class="is-mobile"><?php esc_html_e( 'Filters', 'fashion-brand-theme' ); ?></span>
 			<?php if ( $filter_count > 0 ) : ?>
@@ -78,23 +76,16 @@ $total = (int) wc_get_loop_prop( 'total' );
 
 		<div class="shop-bar__triggers">
 			<button type="button" class="shop-bar__trigger" data-shop-filters-open="color" aria-controls="shop-sidebar-filters">
-				<svg class="shop-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-					<circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="1.5"/>
-				</svg>
+				<?php echo fashion_brand_theme_get_icon( 'circle', array( 'width' => 16, 'height' => 16, 'class' => 'shop-bar__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<span><?php esc_html_e( 'Color', 'fashion-brand-theme' ); ?></span>
 			</button>
 			<button type="button" class="shop-bar__trigger" data-shop-filters-open="size" aria-controls="shop-sidebar-filters">
-				<svg class="shop-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-					<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-					<path d="M7 7h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-				</svg>
+				<?php echo fashion_brand_theme_get_icon( 'tag', array( 'width' => 16, 'height' => 16, 'class' => 'shop-bar__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<span><?php esc_html_e( 'Size', 'fashion-brand-theme' ); ?></span>
 			</button>
 			<button type="button" class="shop-bar__trigger" data-shop-filters-open="price" aria-controls="shop-sidebar-filters">
 				<span><?php esc_html_e( 'Price', 'fashion-brand-theme' ); ?></span>
-				<svg class="shop-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-					<path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>
+				<?php echo fashion_brand_theme_get_icon( 'chevron-down', array( 'width' => 16, 'height' => 16, 'class' => 'shop-bar__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</button>
 		</div>
 	</div>

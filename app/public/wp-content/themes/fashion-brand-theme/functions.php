@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FASHION_BRAND_THEME_VERSION', '0.4.53' );
+define( 'FASHION_BRAND_THEME_VERSION', '0.4.55' );
 define( 'FASHION_BRAND_THEME_DIR', get_template_directory() );
 define( 'FASHION_BRAND_THEME_URI', get_template_directory_uri() );
 
@@ -62,6 +62,7 @@ function fashion_brand_theme_configure_smtp( $phpmailer ) {
 add_action( 'phpmailer_init', 'fashion_brand_theme_configure_smtp' );
 
 require FASHION_BRAND_THEME_DIR . '/inc/setup.php';
+require FASHION_BRAND_THEME_DIR . '/inc/icons.php';
 require FASHION_BRAND_THEME_DIR . '/inc/category-icons.php';
 require FASHION_BRAND_THEME_DIR . '/inc/social-media.php';
 require FASHION_BRAND_THEME_DIR . '/inc/enqueue.php';

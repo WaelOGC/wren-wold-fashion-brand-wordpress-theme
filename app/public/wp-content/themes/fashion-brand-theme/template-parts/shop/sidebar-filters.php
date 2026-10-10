@@ -28,7 +28,9 @@ $action = fashion_brand_theme_get_clear_filters_url();
 	<div class="shop-sidebar__panel" role="dialog" aria-modal="true" aria-labelledby="shop-filters-title">
 		<div class="shop-sidebar__head">
 			<h2 id="shop-filters-title" class="shop-sidebar__title"><?php esc_html_e( 'Filters', 'fashion-brand-theme' ); ?></h2>
-			<button type="button" class="shop-sidebar__close" data-shop-filters-close aria-label="<?php esc_attr_e( 'Close filters', 'fashion-brand-theme' ); ?>">&times;</button>
+			<button type="button" class="shop-sidebar__close" data-shop-filters-close aria-label="<?php esc_attr_e( 'Close filters', 'fashion-brand-theme' ); ?>">
+				<?php echo fashion_brand_theme_get_icon( 'x', array( 'width' => 18, 'height' => 18 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</button>
 		</div>
 
 		<form class="shop-filters" method="get" action="<?php echo esc_url( $action ); ?>" data-shop-filters>

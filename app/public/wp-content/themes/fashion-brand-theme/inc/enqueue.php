@@ -261,6 +261,21 @@ function fashion_brand_theme_enqueue_assets() {
 add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_enqueue_assets' );
 
 /**
+ * Remove WooCommerce's bundled default frontend stylesheets.
+ *
+ * The theme hand-styles WooCommerce surfaces; keep WC's general, layout,
+ * and small-screen CSS from loading site-wide.
+ *
+ * @return void
+ */
+function fashion_brand_theme_dequeue_woocommerce_styles() {
+	wp_dequeue_style( 'woocommerce-general' );
+	wp_dequeue_style( 'woocommerce-layout' );
+	wp_dequeue_style( 'woocommerce-smallscreen' );
+}
+add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_dequeue_woocommerce_styles', 20 );
+
+/**
  * Output production favicon links when no Customizer site icon is set.
  *
  * @return void
