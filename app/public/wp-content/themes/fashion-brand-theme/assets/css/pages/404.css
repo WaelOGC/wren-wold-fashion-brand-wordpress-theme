@@ -8,6 +8,13 @@
 	background: var(--color-ink, #15181a);
 }
 
+.error404 .site-content {
+	width: 100%;
+	max-width: none;
+	padding: 0;
+	margin: 0;
+}
+
 .error-404-scene {
 	position: relative;
 	width: 100vw;
@@ -31,14 +38,15 @@
 .error-404-scene__scrim {
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--color-ink, #15181a) 25%, transparent) 0%,
-		transparent 30%,
-		transparent 55%,
-		color-mix(in srgb, var(--color-ink, #15181a) 70%, transparent) 85%,
-		color-mix(in srgb, var(--color-ink, #15181a) 85%, transparent) 100%
-	);
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--color-ink, #15181a) 42%, transparent) 0%,
+			color-mix(in srgb, var(--color-ink, #15181a) 52%, transparent) 45%,
+			color-mix(in srgb, var(--color-ink, #15181a) 68%, transparent) 72%,
+			color-mix(in srgb, var(--color-ink, #15181a) 84%, transparent) 100%
+		),
+		color-mix(in srgb, var(--color-accent, #3f5348) 24%, transparent);
 }
 
 .error-404-scene__content {
