@@ -122,6 +122,24 @@ function fashion_brand_theme_ensure_product_categories() {
 				'wpseo_desc'    => "Shop women's coats and jackets at WREN WOLD — lightweight to structured outerwear for European weather.",
 			),
 		),
+		'maternity' => array(
+			'name'        => 'Maternity',
+			'description' => 'Maternity wear designed for comfort and ease through every stage of pregnancy, from dresses to everyday layers.',
+			'yoast'       => array(
+				'wpseo_focuskw' => 'maternity clothing',
+				'wpseo_title'   => 'Maternity Wear | WREN WOLD',
+				'wpseo_desc'    => 'Shop maternity clothing at WREN WOLD — comfortable pieces made for every stage of pregnancy.',
+			),
+		),
+		'plus-size' => array(
+			'name'        => 'Plus Size',
+			'description' => 'The same considered pieces in extended sizing, built with the same fit and quality as the rest of the collection.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "plus size women's clothing",
+				'wpseo_title'   => "Plus Size Women's Clothing | WREN WOLD",
+				'wpseo_desc'    => "Shop plus size women's clothing at WREN WOLD — extended sizing with the same fit and quality as the main collection.",
+			),
+		),
 	);
 
 	foreach ( $categories as $slug => $category ) {
