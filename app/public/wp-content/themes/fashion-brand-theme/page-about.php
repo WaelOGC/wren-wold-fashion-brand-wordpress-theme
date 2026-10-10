@@ -20,6 +20,16 @@ $intro_copy = __(
 	'fashion-brand-theme'
 );
 
+// Pull-quote split of $intro_copy (same wording; layout-only).
+$intro_quote = __(
+	'The name WRENWOLD comes from two quiet ideas. The <em>wren</em> — small, clever, and unmistakably present despite its size. And the <em>wold</em> — an old word for open land, for space and stillness.',
+	'fashion-brand-theme'
+);
+$intro_support = __(
+	'Together, they describe what we want to be: confident without needing to shout, elegant without needing to try too hard.',
+	'fashion-brand-theme'
+);
+
 $started_heading = __( 'Where it started', 'fashion-brand-theme' );
 $started_p1      = __(
 	"Our founder's story with fashion began early — not as a business plan, but as a genuine fascination with fabric and how clothes are made. That early spark only grew stronger after an encounter with a fashion designer who sketched her ideas by hand and watched them become real garments. It was the kind of moment that stays with you.",
@@ -70,19 +80,24 @@ $allowed_inline = array(
 	</section>
 
 	<section class="about-page__content" aria-label="<?php esc_attr_e( 'About WREN WOLD', 'fashion-brand-theme' ); ?>">
-		<div class="about-page__inner">
-			<div class="about-section about-reveal">
-				<p class="about-section__text"><?php echo wp_kses( $intro_copy, $allowed_inline ); ?></p>
-			</div>
+		<div class="about-pullquote about-reveal">
+			<p class="about-pullquote__quote"><?php echo wp_kses( $intro_quote, $allowed_inline ); ?></p>
+			<p class="about-pullquote__support"><?php echo esc_html( $intro_support ); ?></p>
+		</div>
 
-			<div class="about-section about-reveal">
+		<div class="about-section about-section--band about-reveal">
+			<div class="about-page__inner">
+				<p class="about-section__eyebrow"><?php echo esc_html( $started_heading ); ?></p>
 				<h2 class="about-section__heading"><?php echo esc_html( $started_heading ); ?></h2>
 				<p class="about-section__text"><?php echo esc_html( $started_p1 ); ?></p>
 				<p class="about-section__text"><?php echo esc_html( $started_p2 ); ?></p>
 				<p class="about-section__text"><?php echo esc_html( $started_p3 ); ?></p>
 			</div>
+		</div>
 
+		<div class="about-page__inner">
 			<div class="about-section about-reveal">
+				<p class="about-section__eyebrow"><?php echo esc_html( $believe_heading ); ?></p>
 				<h2 class="about-section__heading"><?php echo esc_html( $believe_heading ); ?></h2>
 				<p class="about-section__text"><?php echo esc_html( $believe_p1 ); ?></p>
 				<p class="about-section__text"><?php echo esc_html( $believe_p2 ); ?></p>
@@ -128,7 +143,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
 				observer.disconnect();
 			} );
 		},
-		{ threshold: 0.2 }
+		{ threshold: 0.15 }
 	);
 
 	observer.observe( contentSection );
