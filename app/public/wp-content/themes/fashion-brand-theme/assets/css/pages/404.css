@@ -1,26 +1,25 @@
 /**
- * 404 page — full-bleed banner hero + centered recovery content.
+ * 404 page — full-viewport scene, content overlaid on the image.
  *
  * @package Fashion_Brand_Theme
  */
 
 .error-404-page {
-	background: var(--color-bg);
+	background: var(--color-ink, #15181a);
 }
 
-/* -------------------------------------------------------------------------
-   Hero banner
-   ------------------------------------------------------------------------- */
-
-.error-404-banner {
+.error-404-scene {
 	position: relative;
 	width: 100vw;
 	margin-left: calc(50% - 50vw);
-	height: 420px;
+	min-height: 100vh;
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
 }
 
-.error-404-banner__image {
+.error-404-scene__image {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -29,27 +28,31 @@
 	background-position: center top;
 }
 
-.error-404-banner__overlay {
-	position: relative;
-	z-index: 2;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-end;
-	align-items: flex-start;
-	padding: 0 48px 48px;
-	text-align: left;
+.error-404-scene__scrim {
+	position: absolute;
+	inset: 0;
 	background: linear-gradient(
 		180deg,
-		transparent 0%,
-		transparent 45%,
-		color-mix(in srgb, var(--color-ink, #15181a) 55%, transparent) 75%,
-		color-mix(in srgb, var(--color-ink, #15181a) 72%, transparent) 100%
+		color-mix(in srgb, var(--color-ink, #15181a) 25%, transparent) 0%,
+		transparent 30%,
+		transparent 55%,
+		color-mix(in srgb, var(--color-ink, #15181a) 70%, transparent) 85%,
+		color-mix(in srgb, var(--color-ink, #15181a) 85%, transparent) 100%
 	);
 }
 
-.error-404-banner__eyebrow {
-	margin: 0 0 8px;
+.error-404-scene__content {
+	position: relative;
+	z-index: 2;
+	width: 100%;
+	max-width: 640px;
+	margin: 0 auto;
+	padding: 0 48px 96px;
+	text-align: center;
+}
+
+.error-404-scene__eyebrow {
+	margin: 0 0 14px;
 	font-family: var(--font-family-base);
 	font-size: 11px;
 	font-weight: 700;
@@ -58,37 +61,25 @@
 	color: var(--color-accent-light, var(--color-accent));
 }
 
-.error-404-banner__heading {
-	margin: 0;
-	max-width: 18ch;
+.error-404-scene__heading {
+	margin: 0 0 20px;
 	font-family: var(--font-family-display);
-	font-size: clamp(26px, 3.6vw, 40px);
+	font-size: clamp(28px, 4.2vw, 48px);
 	font-weight: 500;
 	line-height: 1.15;
 	color: var(--color-text-inverse, #fff);
 }
 
-/* -------------------------------------------------------------------------
-   Content
-   ------------------------------------------------------------------------- */
-
-.error-404-content {
-	max-width: 640px;
-	margin: 0 auto;
-	padding: 96px 48px;
-	text-align: center;
-}
-
-.error-404-content__body {
+.error-404-scene__body {
 	margin: 0;
 	font-family: var(--font-family-base);
 	font-size: 16px;
 	font-weight: 500;
 	line-height: 1.7;
-	color: var(--color-text-muted, var(--color-muted));
+	color: color-mix(in srgb, var(--color-text-inverse, #fff) 80%, transparent);
 }
 
-.error-404-content__actions {
+.error-404-scene__actions {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -97,7 +88,7 @@
 	margin-top: 32px;
 }
 
-.error-404-content__cta {
+.error-404-scene__cta {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -115,39 +106,39 @@
 		border-color var(--transition-base, 0.2s ease);
 }
 
-.error-404-content__cta:hover,
-.error-404-content__cta:focus-visible {
+.error-404-scene__cta:hover,
+.error-404-scene__cta:focus-visible {
 	background-color: var(--color-accent-hover, var(--color-accent));
 	border-color: var(--color-accent-hover, var(--color-accent));
 	color: var(--color-text-inverse, #fff);
 }
 
-.error-404-content__cta:focus-visible {
-	outline: var(--focus-outline-width, 2px) solid var(--color-focus, var(--color-accent));
+.error-404-scene__cta:focus-visible {
+	outline: var(--focus-outline-width, 2px) solid var(--color-focus, var(--color-accent-light));
 	outline-offset: var(--focus-outline-offset, 2px);
 }
 
-.error-404-content__link {
+.error-404-scene__link {
 	display: inline-flex;
 	align-items: center;
 	min-height: 2.75rem;
 	padding: 0 4px;
-	color: var(--color-text);
+	color: var(--color-text-inverse, #fff);
 	font-family: var(--font-family-base);
 	font-size: 14px;
 	font-weight: 500;
 	text-decoration: none;
 }
 
-.error-404-content__link:hover,
-.error-404-content__link:focus-visible {
+.error-404-scene__link:hover,
+.error-404-scene__link:focus-visible {
 	text-decoration: underline;
 	text-underline-offset: 3px;
-	color: var(--color-text);
+	color: var(--color-text-inverse, #fff);
 }
 
-.error-404-content__link:focus-visible {
-	outline: var(--focus-outline-width, 2px) solid var(--color-focus, var(--color-accent));
+.error-404-scene__link:focus-visible {
+	outline: var(--focus-outline-width, 2px) solid var(--color-focus, var(--color-accent-light));
 	outline-offset: var(--focus-outline-offset, 2px);
 }
 
@@ -161,10 +152,10 @@
 	width: 100%;
 	max-width: 420px;
 	margin: 40px auto 0;
-	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md, 4px);
-	background: var(--color-surface, var(--color-bg));
+	background: color-mix(in srgb, var(--color-surface, #fafaf8) 94%, transparent);
 	overflow: hidden;
+	box-shadow: 0 8px 24px color-mix(in srgb, var(--color-ink, #15181a) 25%, transparent);
 }
 
 .error-404-search__field {
@@ -204,7 +195,7 @@
 
 .error-404-search__submit:hover,
 .error-404-search__submit:focus-visible {
-	background: var(--color-surface-muted, color-mix(in srgb, var(--color-ink) 4%, transparent));
+	background: color-mix(in srgb, var(--color-ink) 6%, transparent);
 	color: var(--color-accent);
 }
 
@@ -218,30 +209,22 @@
    ------------------------------------------------------------------------- */
 
 @media (max-width: 860px) {
-	.error-404-banner {
-		height: 320px;
-	}
-
-	.error-404-banner__image {
+	.error-404-scene__image {
 		background-image: url("../../images/404-photography/404-empty-rack-mobile.webp") !important;
 	}
 
-	.error-404-banner__overlay {
-		padding: 0 24px 32px;
-	}
-
-	.error-404-content {
-		padding: 56px 20px;
+	.error-404-scene__content {
+		padding: 0 24px 64px;
 	}
 }
 
 @media (max-width: 480px) {
-	.error-404-content__actions {
+	.error-404-scene__actions {
 		flex-direction: column;
 	}
 
-	.error-404-content__cta,
-	.error-404-content__link {
+	.error-404-scene__cta,
+	.error-404-scene__link {
 		width: 100%;
 		justify-content: center;
 	}
