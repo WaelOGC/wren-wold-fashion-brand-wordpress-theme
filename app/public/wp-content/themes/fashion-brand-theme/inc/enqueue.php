@@ -176,6 +176,15 @@ function fashion_brand_theme_enqueue_assets() {
 		);
 	}
 
+	if ( is_404() ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-404',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/404.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+	}
+
 	if ( is_page( 'wishlist' ) ) {
 		wp_enqueue_style(
 			'fashion-brand-theme-wishlist',
