@@ -61,6 +61,14 @@ function fashion_brand_theme_get_category_icon_definitions() {
 			'label' => __( 'Coat', 'fashion-brand-theme' ),
 			'svg'   => $svg_open . '<path d="M8 6 L4 4 L2 7 L6 9 V21 H18 V9 L22 7 L20 4 L16 6" /><path d="M9 6 L12 11 L15 6" /><path d="M12 11 V21" />' . $svg_close,
 		),
+		'maternity' => array(
+			'label' => __( 'Maternity', 'fashion-brand-theme' ),
+			'svg'   => $svg_open . '<circle cx="12" cy="5" r="2" /><path d="M9 9 C6 10 5 13 5 16 C5 18.5 7.5 20.5 12 20.5 C16.5 20.5 19 18.5 19 16 C19 13 18 10 15 9" />' . $svg_close,
+		),
+		'plus-size' => array(
+			'label' => __( 'Plus Size', 'fashion-brand-theme' ),
+			'svg'   => $svg_open . '<path d="M9 4 H15 V9 L18 19 H6 L9 9 Z" /><path d="M16 14.5 H20" /><path d="M18 12.5 V16.5" />' . $svg_close,
+		),
 	);
 
 	return $definitions;
@@ -224,7 +232,9 @@ function fashion_brand_theme_get_category_icon_key( $term_id ) {
 		'pants'    => 'pants',
 		'skirts'   => 'skirt',
 		'dresses'  => 'dress',
-		'coats'    => 'coat',
+		'coats'     => 'coat',
+		'maternity' => 'maternity',
+		'plus-size' => 'plus-size',
 	);
 
 	return isset( $defaults[ $term->slug ] ) ? $defaults[ $term->slug ] : '';
