@@ -1,11 +1,35 @@
 /**
- * My Account interactions — coupon copy.
+ * My Account — auth panel toggle + coupon copy.
  *
  * @package Fashion_Brand_Theme
  */
 
 ( function () {
 	'use strict';
+
+	function showAuth( which ) {
+		var loginPanel = document.getElementById( 'auth-login' );
+		var registerPanel = document.getElementById( 'auth-register' );
+
+		if ( ! loginPanel ) {
+			return;
+		}
+
+		loginPanel.classList.toggle( 'active', which === 'login' );
+
+		if ( registerPanel ) {
+			registerPanel.classList.toggle( 'active', which === 'register' );
+		}
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		var toggle = event.target.closest( '.auth-toggle[data-auth-panel]' );
+
+		if ( toggle ) {
+			event.preventDefault();
+			showAuth( toggle.getAttribute( 'data-auth-panel' ) );
+		}
+	} );
 
 	function copyText( text ) {
 		if ( navigator.clipboard && navigator.clipboard.writeText ) {
@@ -37,8 +61,10 @@
 	}
 
 	function showCopied( button ) {
-		var defaultLabel = button.getAttribute( 'data-label-default' ) || button.textContent;
-		var copiedLabel = button.getAttribute( 'data-label-copied' ) || 'Copied!';
+		var defaultLabel =
+			button.getAttribute( 'data-label-default' ) || button.textContent.trim();
+		var copiedLabel =
+			button.getAttribute( 'data-label-copied' ) || 'Copied ✓';
 
 		button.textContent = copiedLabel;
 		button.classList.add( 'is-copied' );
@@ -47,7 +73,7 @@
 		window.setTimeout( function () {
 			button.textContent = defaultLabel;
 			button.classList.remove( 'is-copied' );
-		}, 1800 );
+		}, 1500 );
 	}
 
 	document.addEventListener( 'click', function ( event ) {

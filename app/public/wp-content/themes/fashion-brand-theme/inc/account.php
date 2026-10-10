@@ -47,6 +47,36 @@ function fashion_brand_theme_maybe_flush_account_endpoints() {
 add_action( 'init', 'fashion_brand_theme_maybe_flush_account_endpoints', 99 );
 
 /**
+ * Dequeue WooCommerce password strength meter on account routes (plain password fields).
+ *
+ * @return void
+ */
+function fashion_brand_theme_account_dequeue_password_meter() {
+	if ( ! function_exists( 'is_account_page' ) || ! is_account_page() ) {
+		return;
+	}
+
+	wp_dequeue_script( 'wc-password-strength-meter' );
+}
+add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_account_dequeue_password_meter', 100 );
+
+/**
+ * Format a stat count for dashboard display (two digits, max 99).
+ *
+ * @param int $count Raw count.
+ * @return string
+ */
+function fashion_brand_theme_format_account_stat( $count ) {
+	$count = max( 0, (int) $count );
+
+	if ( $count > 99 ) {
+		return '99+';
+	}
+
+	return str_pad( (string) $count, 2, '0', STR_PAD_LEFT );
+}
+
+/**
  * Control My Account menu order and labels.
  *
  * @param array $items Menu items.
@@ -54,13 +84,13 @@ add_action( 'init', 'fashion_brand_theme_maybe_flush_account_endpoints', 99 );
  */
 function fashion_brand_theme_account_menu_items( $items ) {
 	return array(
-		'dashboard'       => __( 'Dashboard', 'fashion-brand-theme' ),
+		'dashboard'       => __( 'Overview', 'fashion-brand-theme' ),
 		'orders'          => __( 'Orders', 'fashion-brand-theme' ),
 		'edit-address'    => __( 'Addresses', 'fashion-brand-theme' ),
 		'wishlist'        => __( 'Wishlist', 'fashion-brand-theme' ),
-		'coupons'         => __( 'Coupons', 'fashion-brand-theme' ),
-		'edit-account'    => __( 'Account Details', 'fashion-brand-theme' ),
-		'customer-logout' => __( 'Log Out', 'fashion-brand-theme' ),
+		'coupons'         => __( 'Offers', 'fashion-brand-theme' ),
+		'edit-account'    => __( 'Details', 'fashion-brand-theme' ),
+		'customer-logout' => __( 'Sign out', 'fashion-brand-theme' ),
 	);
 }
 add_filter( 'woocommerce_account_menu_items', 'fashion_brand_theme_account_menu_items' );
@@ -74,7 +104,7 @@ add_filter( 'woocommerce_account_menu_items', 'fashion_brand_theme_account_menu_
  */
 function fashion_brand_theme_account_endpoint_title( $title, $endpoint ) {
 	if ( 'coupons' === $endpoint ) {
-		return __( 'Coupons', 'fashion-brand-theme' );
+		return __( 'Offers', 'fashion-brand-theme' );
 	}
 
 	if ( 'wishlist' === $endpoint ) {
@@ -180,18 +210,18 @@ function fashion_brand_theme_render_coupon_cards( $coupons, $args = array() ) {
 
 	if ( empty( $coupons ) ) {
 		?>
-		<p class="acct-empty" role="status"><?php esc_html_e( 'There are no active coupons right now. Check back soon.', 'fashion-brand-theme' ); ?></p>
+		<p class="block-empty" role="status"><?php esc_html_e( 'There are no active offers right now. Check back soon.', 'fashion-brand-theme' ); ?></p>
 		<?php
 		return;
 	}
 
-	echo '<div class="coupon-row">';
+	echo '<div class="coupon-grid">';
 
 	foreach ( $coupons as $coupon ) {
 		$code    = $coupon->get_code();
 		$expires = $coupon->get_date_expires();
 		?>
-		<div class="coupon-card">
+		<div class="coupon">
 			<div class="coupon-code"><?php echo esc_html( strtoupper( $code ) ); ?></div>
 			<p class="coupon-desc"><?php echo wp_kses_post( fashion_brand_theme_format_coupon_discount( $coupon ) ); ?></p>
 			<?php if ( $args['show_expiry'] ) : ?>
@@ -212,14 +242,14 @@ function fashion_brand_theme_render_coupon_cards( $coupons, $args = array() ) {
 			<?php if ( $args['show_copy'] ) : ?>
 				<button
 					type="button"
-					class="btn btn--sm copy-btn"
+					class="text-link copy-btn"
 					data-code="<?php echo esc_attr( $code ); ?>"
 					data-coupon-copy
 					data-coupon-code="<?php echo esc_attr( $code ); ?>"
-					data-label-default="<?php esc_attr_e( 'Copy Code', 'fashion-brand-theme' ); ?>"
-					data-label-copied="<?php esc_attr_e( 'Copied!', 'fashion-brand-theme' ); ?>"
+					data-label-default="<?php esc_attr_e( 'Copy code ↗', 'fashion-brand-theme' ); ?>"
+					data-label-copied="<?php esc_attr_e( 'Copied ✓', 'fashion-brand-theme' ); ?>"
 				>
-					<?php esc_html_e( 'Copy Code', 'fashion-brand-theme' ); ?>
+					<?php esc_html_e( 'Copy code ↗', 'fashion-brand-theme' ); ?>
 				</button>
 			<?php endif; ?>
 		</div>
@@ -236,9 +266,23 @@ function fashion_brand_theme_render_coupon_cards( $coupons, $args = array() ) {
  */
 function fashion_brand_theme_account_coupons_endpoint() {
 	$coupons = fashion_brand_theme_get_active_coupons();
+	$count   = count( $coupons );
 	?>
-	<div class="acct-card">
-		<p class="acct-section-label"><?php esc_html_e( 'Available Coupons', 'fashion-brand-theme' ); ?></p>
+	<div class="block">
+		<div class="block-head">
+			<h2><?php esc_html_e( 'Your member offers', 'fashion-brand-theme' ); ?></h2>
+			<span class="micro">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: offer count */
+						_n( '%s active', '%s active', $count, 'fashion-brand-theme' ),
+						fashion_brand_theme_format_account_stat( $count )
+					)
+				);
+				?>
+			</span>
+		</div>
 		<?php fashion_brand_theme_render_coupon_cards( $coupons ); ?>
 	</div>
 	<?php
@@ -253,14 +297,28 @@ add_action( 'woocommerce_account_coupons_endpoint', 'fashion_brand_theme_account
 function fashion_brand_theme_account_wishlist_endpoint() {
 	$wishlist_ids = fashion_brand_theme_get_wishlist_ids();
 	$shop_url     = fashion_brand_theme_get_shop_url();
+	$count        = count( $wishlist_ids );
 	?>
-	<div class="acct-card">
-		<p class="acct-section-label"><?php esc_html_e( 'Your Wishlist', 'fashion-brand-theme' ); ?></p>
+	<div class="block">
+		<div class="block-head">
+			<h2><?php esc_html_e( 'Saved for later', 'fashion-brand-theme' ); ?></h2>
+			<span class="micro">
+				<?php
+				echo esc_html(
+					sprintf(
+						/* translators: %s: piece count */
+						_n( '%s piece', '%s pieces', $count, 'fashion-brand-theme' ),
+						fashion_brand_theme_format_account_stat( $count )
+					)
+				);
+				?>
+			</span>
+		</div>
 		<?php if ( empty( $wishlist_ids ) ) : ?>
-			<p class="acct-empty"><?php esc_html_e( 'Your wishlist is empty.', 'fashion-brand-theme' ); ?></p>
-			<a class="btn btn--primary" href="<?php echo esc_url( $shop_url ); ?>"><?php esc_html_e( 'Shop now', 'fashion-brand-theme' ); ?></a>
+			<p class="block-empty"><?php esc_html_e( 'Your wishlist is empty — save pieces you love and they will appear here.', 'fashion-brand-theme' ); ?></p>
+			<a class="text-link" href="<?php echo esc_url( $shop_url ); ?>"><?php esc_html_e( 'Explore the shop ↗', 'fashion-brand-theme' ); ?></a>
 		<?php else : ?>
-			<div class="wishlist-grid">
+			<div class="wishlist">
 				<?php
 				foreach ( $wishlist_ids as $product_id ) {
 					$product = wc_get_product( $product_id );
@@ -270,11 +328,15 @@ function fashion_brand_theme_account_wishlist_endpoint() {
 					}
 					?>
 					<a class="wishlist-item" href="<?php echo esc_url( $product->get_permalink() ); ?>">
-						<?php
-						echo $product->get_image( 'woocommerce_thumbnail', array( 'class' => 'wishlist-item__img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-						?>
-						<p class="wishlist-item__name"><?php echo esc_html( $product->get_name() ); ?></p>
-						<p class="wishlist-item__price"><?php echo wp_kses_post( $product->get_price_html() ); ?></p>
+						<div class="product-image">
+							<?php
+							if ( $product->get_image_id() ) {
+								echo $product->get_image( 'woocommerce_thumbnail', array( 'class' => 'product-image__img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							}
+							?>
+						</div>
+						<div class="product-name"><?php echo esc_html( $product->get_name() ); ?></div>
+						<div class="product-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
 					</a>
 					<?php
 				}
@@ -471,8 +533,8 @@ function fashion_brand_theme_get_account_initials( $user = null ) {
  * Render account avatar markup.
  *
  * @param array $args {
- *     @type string $size     md|lg.
- *     @type bool   $editable Show camera edit badge linked to #account_avatar.
+ *     @type string $size     md|lg|profile.
+ *     @type bool   $editable Legacy; unused in v3 (use Change photo label).
  *     @type int    $user_id  User ID.
  * }
  * @return void
@@ -491,44 +553,61 @@ function fashion_brand_theme_render_account_avatar( $args = array() ) {
 	$url      = fashion_brand_theme_get_account_avatar_url( $user_id );
 	$user     = get_userdata( $user_id );
 	$initials = fashion_brand_theme_get_account_initials( $user );
-	$classes  = array( 'acct-avatar' );
+	$classes  = array( 'avatar' );
 
 	if ( 'lg' === $args['size'] ) {
-		$classes[] = 'acct-avatar--lg';
+		$classes[] = 'large';
+	}
+
+	if ( 'profile' === $args['size'] ) {
+		$classes[] = 'large';
+		$classes[] = 'profile';
 	}
 
 	if ( $url ) {
-		$classes[] = 'acct-avatar--has-img';
+		$classes[] = 'avatar--has-img';
 	}
 
 	echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '">';
 
 	if ( $url ) {
 		printf(
-			'<img class="acct-avatar__img" src="%1$s" alt="" width="96" height="96" decoding="async" />',
+			'<img class="avatar__img" src="%1$s" alt="" width="96" height="96" decoding="async" />',
 			esc_url( $url )
 		);
 	} else {
 		echo esc_html( $initials );
 	}
 
-	if ( $args['editable'] ) {
-		echo '<label class="acct-avatar-edit" for="account_avatar">';
-		echo fashion_brand_theme_get_icon( 'camera', array( 'width' => 14, 'height' => 14 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		echo '</label>';
-	}
-
 	echo '</div>';
 }
 
 /**
- * CSS class string for an order status badge.
+ * CSS class for v3 order status row (.status.done / .status.cancelled).
+ *
+ * @param string $status Order status slug.
+ * @return string
+ */
+function fashion_brand_theme_get_order_status_row_class( $status ) {
+	$classes = array( 'status' );
+
+	if ( in_array( $status, array( 'completed', 'complete' ), true ) ) {
+		$classes[] = 'done';
+	} elseif ( in_array( $status, array( 'cancelled', 'refunded', 'failed' ), true ) ) {
+		$classes[] = 'cancelled';
+	}
+
+	return implode( ' ', $classes );
+}
+
+/**
+ * CSS class string for an order status badge (legacy).
  *
  * @param string $status Order status slug.
  * @return string
  */
 function fashion_brand_theme_get_order_status_badge_class( $status ) {
-	return 'status-badge status-badge--' . sanitize_html_class( $status );
+	return fashion_brand_theme_get_order_status_row_class( $status );
 }
 
 /**
@@ -538,11 +617,9 @@ function fashion_brand_theme_get_order_status_badge_class( $status ) {
  * @param int      $limit Max thumbnails.
  * @return string[]
  */
-function fashion_brand_theme_get_order_card_thumbnails( $order, $limit = 3 ) {
-	$thumbs = array();
-
+function fashion_brand_theme_get_order_row_thumbnail( $order ) {
 	if ( ! $order instanceof WC_Order ) {
-		return $thumbs;
+		return '';
 	}
 
 	foreach ( $order->get_items() as $item ) {
@@ -553,30 +630,32 @@ function fashion_brand_theme_get_order_card_thumbnails( $order, $limit = 3 ) {
 		$product = $item->get_product();
 
 		if ( $product && $product->get_image_id() ) {
-			$thumbs[] = $product->get_image( 'woocommerce_thumbnail', array( 'class' => 'order-card__thumb' ) );
-		} else {
-			$thumbs[] = '<span class="order-card__thumb order-card__thumb--placeholder" aria-hidden="true"></span>';
+			return $product->get_image(
+				'woocommerce_thumbnail',
+				array(
+					'class' => 'order-thumb__img',
+				)
+			);
 		}
 
-		if ( count( $thumbs ) >= $limit ) {
-			break;
-		}
+		break;
 	}
 
-	return $thumbs;
+	return '';
 }
 
 /**
- * Render a single order card for dashboard / orders list.
+ * Render a single order row for dashboard / orders list.
  *
  * @param WC_Order $order Order object.
  * @param array    $args {
- *     @type bool $show_reorder Include reorder action when available.
- *     @type bool $placed_prefix Prefix meta with "Placed" (dashboard recent order).
+ *     @type bool   $show_reorder  Include reorder action when available.
+ *     @type bool   $placed_prefix Prefix meta with "Placed" (dashboard recent order).
+ *     @type string $view_label    View link label.
  * }
  * @return void
  */
-function fashion_brand_theme_render_account_order_card( $order, $args = array() ) {
+function fashion_brand_theme_render_account_order_row( $order, $args = array() ) {
 	if ( ! $order instanceof WC_Order ) {
 		return;
 	}
@@ -584,15 +663,15 @@ function fashion_brand_theme_render_account_order_card( $order, $args = array() 
 	$args = wp_parse_args(
 		$args,
 		array(
-			'show_reorder'   => true,
-			'placed_prefix'  => false,
-			'view_label'     => __( 'View Order', 'fashion-brand-theme' ),
+			'show_reorder'  => true,
+			'placed_prefix' => false,
+			'view_label'    => __( 'View order ↗', 'fashion-brand-theme' ),
 		)
 	);
 
 	$status   = $order->get_status();
 	$actions  = wc_get_account_orders_actions( $order );
-	$thumbs   = fashion_brand_theme_get_order_card_thumbnails( $order, 3 );
+	$thumb    = fashion_brand_theme_get_order_row_thumbnail( $order );
 	$date_str = wc_format_datetime( $order->get_date_created(), get_option( 'date_format' ) );
 	$total    = wp_strip_all_tags( $order->get_formatted_order_total() );
 
@@ -606,15 +685,40 @@ function fashion_brand_theme_render_account_order_card( $order, $args = array() 
 	} else {
 		$meta = $date_str . ' · ' . $total;
 	}
+
+	$view_url     = '';
+	$reorder_url  = '';
+	$view_aria    = '';
+	$reorder_aria = '';
+
+	foreach ( $actions as $key => $action ) {
+		if ( 'view' === $key ) {
+			$view_url  = $action['url'];
+			$view_aria = ! empty( $action['aria-label'] )
+				? $action['aria-label']
+				: sprintf(
+					/* translators: %s: order number */
+					__( 'View order %s', 'fashion-brand-theme' ),
+					$order->get_order_number()
+				);
+		}
+
+		if ( 'reorder' === $key && $args['show_reorder'] ) {
+			$reorder_url  = $action['url'];
+			$reorder_aria = ! empty( $action['aria-label'] ) ? $action['aria-label'] : $action['name'];
+		}
+	}
 	?>
-	<div class="order-card woocommerce-orders-table__row woocommerce-orders-table__row--status-<?php echo esc_attr( $status ); ?>">
-		<?php if ( ! empty( $thumbs ) ) : ?>
-			<div class="order-card__thumbs">
-				<?php echo implode( '', $thumbs ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			</div>
-		<?php endif; ?>
-		<div class="order-card__info">
-			<p class="order-card__id">
+	<div class="order-row woocommerce-orders-table__row woocommerce-orders-table__row--status-<?php echo esc_attr( $status ); ?>">
+		<div class="order-thumb">
+			<?php
+			if ( $thumb ) {
+				echo $thumb; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			}
+			?>
+		</div>
+		<div>
+			<div class="order-id">
 				<?php
 				printf(
 					/* translators: %s: order number */
@@ -622,48 +726,43 @@ function fashion_brand_theme_render_account_order_card( $order, $args = array() 
 					esc_html( $order->get_order_number() )
 				);
 				?>
-			</p>
-			<p class="order-card__meta"><?php echo esc_html( $meta ); ?></p>
+			</div>
+			<div class="meta"><?php echo esc_html( $meta ); ?></div>
 		</div>
-		<span class="<?php echo esc_attr( fashion_brand_theme_get_order_status_badge_class( $status ) ); ?>">
-			<?php echo esc_html( wc_get_order_status_name( $status ) ); ?>
-		</span>
-		<div class="order-card__actions">
-			<?php
-			foreach ( $actions as $key => $action ) {
-				if ( ! $args['show_reorder'] && 'reorder' === $key ) {
-					continue;
-				}
-
-				if ( empty( $action['aria-label'] ) ) {
-					/* translators: %1$s Action name, %2$s Order number. */
-					$action_aria_label = sprintf( __( '%1$s order number %2$s', 'woocommerce' ), $action['name'], $order->get_order_number() );
-				} else {
-					$action_aria_label = $action['aria-label'];
-				}
-
-				$btn_class = 'btn btn--sm woocommerce-button ' . sanitize_html_class( $key );
-
-				if ( in_array( $key, array( 'pay', 'reorder' ), true ) ) {
-					$btn_class .= ' btn--primary';
-				}
-
-				if ( 'view' === $key && ! empty( $args['view_label'] ) ) {
-					$action['name'] = $args['view_label'];
-				}
-
-				printf(
-					'<a href="%1$s" class="%2$s" aria-label="%3$s">%4$s</a>',
-					esc_url( $action['url'] ),
-					esc_attr( $btn_class ),
-					esc_attr( $action_aria_label ),
-					esc_html( $action['name'] )
-				);
-			}
-			?>
+		<div class="order-right">
+			<div class="<?php echo esc_attr( fashion_brand_theme_get_order_status_row_class( $status ) ); ?>">
+				<span class="dot" aria-hidden="true"></span>
+				<?php echo esc_html( wc_get_order_status_name( $status ) ); ?>
+			</div>
+			<?php if ( $view_url || $reorder_url ) : ?>
+				<p class="order-actions">
+					<?php if ( $view_url ) : ?>
+						<a class="text-link woocommerce-button view" href="<?php echo esc_url( $view_url ); ?>" aria-label="<?php echo esc_attr( $view_aria ); ?>">
+							<?php echo esc_html( $args['view_label'] ); ?>
+						</a>
+					<?php endif; ?>
+					<?php if ( $reorder_url ) : ?>
+						<?php if ( $view_url ) : ?>
+							<span class="order-actions__sep" aria-hidden="true"> · </span>
+						<?php endif; ?>
+						<a class="text-link woocommerce-button reorder" href="<?php echo esc_url( $reorder_url ); ?>" aria-label="<?php echo esc_attr( $reorder_aria ); ?>">
+							<?php esc_html_e( 'Reorder', 'fashion-brand-theme' ); ?>
+						</a>
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
 		</div>
 	</div>
 	<?php
+}
+
+/**
+ * @param WC_Order $order Order.
+ * @param array    $args  Arguments.
+ * @return void
+ */
+function fashion_brand_theme_render_account_order_card( $order, $args = array() ) {
+	fashion_brand_theme_render_account_order_row( $order, $args );
 }
 
 /**
