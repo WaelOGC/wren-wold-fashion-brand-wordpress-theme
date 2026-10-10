@@ -157,6 +157,15 @@
 
 	searchToggles.forEach( function ( toggle ) {
 		toggle.addEventListener( 'click', function () {
+			if ( usesCompactNavigation() ) {
+				const searchPageUrl = toggle.getAttribute( 'data-search-page-url' );
+
+				if ( searchPageUrl ) {
+					window.location.href = searchPageUrl;
+					return;
+				}
+			}
+
 			if ( ! searchPanel ) {
 				return;
 			}
@@ -176,6 +185,12 @@
 					searchField.focus();
 				}
 			}
+		} );
+	} );
+
+	document.querySelectorAll( '[data-search-panel-close]' ).forEach( function ( closer ) {
+		closer.addEventListener( 'click', function () {
+			closeSearchPanel();
 		} );
 	} );
 

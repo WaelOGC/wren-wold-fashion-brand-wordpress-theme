@@ -30,6 +30,7 @@ if ( ! $show_search && ! $show_account && ! $show_cart ) {
 						aria-controls="header-search-panel"
 						aria-label="<?php esc_attr_e( 'Search', 'fashion-brand-theme' ); ?>"
 						data-search-toggle
+						data-search-page-url="<?php echo esc_url( fashion_brand_theme_get_search_url() ); ?>"
 					>
 						<svg class="utility-menu__icon" width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
 							<circle cx="10.5" cy="10.5" r="5.75" stroke="currentColor" stroke-width="1.25"/>

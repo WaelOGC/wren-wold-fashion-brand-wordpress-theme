@@ -70,6 +70,30 @@ function fashion_brand_theme_enqueue_assets() {
 		fashion_brand_theme_wishlist_script_data()
 	);
 
+	wp_enqueue_script(
+		'fashion-brand-theme-live-search',
+		FASHION_BRAND_THEME_URI . '/assets/js/live-search.js',
+		array(),
+		FASHION_BRAND_THEME_VERSION,
+		true
+	);
+
+	wp_localize_script(
+		'fashion-brand-theme-live-search',
+		'fashionBrandThemeLiveSearch',
+		array(
+			'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+			'nonce'     => wp_create_nonce( 'fashion_brand_theme_live_search' ),
+			'minChars'  => 2,
+			'searchUrl' => fashion_brand_theme_get_search_url(),
+			'i18n'      => array(
+				'result'  => __( 'result', 'fashion-brand-theme' ),
+				'results' => __( 'results', 'fashion-brand-theme' ),
+				'viewAll' => __( 'View all results', 'fashion-brand-theme' ),
+			),
+		)
+	);
+
 	if ( is_front_page() ) {
 		wp_enqueue_script(
 			'fashion-brand-theme-homepage-cinematic',
@@ -180,6 +204,15 @@ function fashion_brand_theme_enqueue_assets() {
 		wp_enqueue_style(
 			'fashion-brand-theme-404',
 			FASHION_BRAND_THEME_URI . '/assets/css/pages/404.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+	}
+
+	if ( is_search() ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-search',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/search.css',
 			array( 'fashion-brand-theme-main' ),
 			FASHION_BRAND_THEME_VERSION
 		);
