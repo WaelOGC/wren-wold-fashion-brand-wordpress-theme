@@ -561,6 +561,25 @@ body.home .site-content {
 .cat-list {
 	display: flex;
 	flex-direction: column;
+	max-height: calc(100vh - 260px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-accent-light) transparent;
+}
+
+.cat-list::-webkit-scrollbar {
+	width: 4px;
+}
+
+.cat-list::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.cat-list::-webkit-scrollbar-thumb {
+	background: var(--color-accent-light);
+	border-radius: 2px;
 }
 
 .cat-item {
