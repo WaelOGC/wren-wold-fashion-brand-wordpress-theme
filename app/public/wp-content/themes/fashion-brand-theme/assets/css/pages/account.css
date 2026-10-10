@@ -1,0 +1,709 @@
+/**
+ * My Account — login/register, navigation, dashboard, orders, coupons, forms.
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+/* -------------------------------------------------------------------------
+   Layout shell
+   ------------------------------------------------------------------------- */
+
+.woocommerce-account .site-main--shop,
+.woocommerce-account .woocommerce {
+	width: min(100% - (var(--container-padding, 1.5rem) * 2), var(--container-wide, 80rem));
+	margin-inline: auto;
+}
+
+.woocommerce-account .woocommerce-MyAccount-navigation + .woocommerce-MyAccount-content,
+.woocommerce-account .u-columns,
+.woocommerce-account .woocommerce {
+	max-width: none;
+}
+
+body.woocommerce-account .woocommerce {
+	display: grid;
+	gap: var(--space-7);
+}
+
+@media (min-width: 768px) {
+	body.woocommerce-account.logged-in .woocommerce {
+		grid-template-columns: 14rem minmax(0, 1fr);
+		gap: var(--space-8);
+		align-items: start;
+	}
+}
+
+/* Hide WooCommerce default dashboard paragraphs when our dashboard is present */
+.woocommerce-MyAccount-content:has(.account-dashboard) > p {
+	display: none;
+}
+
+/* -------------------------------------------------------------------------
+   Login / Register
+   ------------------------------------------------------------------------- */
+
+.account-auth {
+	display: grid;
+	gap: var(--space-5);
+	width: min(100%, 56rem);
+	margin: 0 auto;
+}
+
+.account-auth__panel {
+	padding: var(--space-6) var(--space-5);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+}
+
+.account-auth__heading {
+	margin: 0 0 var(--space-2);
+	font-family: var(--font-family-display);
+	font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--color-text);
+}
+
+.account-auth__sub {
+	margin: 0 0 var(--space-5);
+	font-size: 0.9375rem;
+	line-height: 1.55;
+	color: var(--color-text-muted);
+}
+
+.account-auth .woocommerce-form-row,
+.account-auth .form-row {
+	margin: 0 0 var(--space-4);
+}
+
+.account-auth label {
+	display: block;
+	margin-bottom: var(--space-2);
+	font: var(--font-label);
+	letter-spacing: 0.04em;
+	color: var(--color-text);
+}
+
+.account-auth .woocommerce-Input,
+.account-auth input.input-text,
+.account-auth input[type="text"],
+.account-auth input[type="email"],
+.account-auth input[type="password"] {
+	width: 100%;
+	min-height: 44px;
+	padding: 12px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	font-family: var(--font-family-base);
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--color-text);
+}
+
+.account-auth .woocommerce-Input:focus-visible,
+.account-auth input.input-text:focus-visible,
+.account-auth input[type="text"]:focus-visible,
+.account-auth input[type="email"]:focus-visible,
+.account-auth input[type="password"]:focus-visible {
+	outline: var(--focus-outline-width) solid var(--color-focus);
+	outline-offset: var(--focus-outline-offset);
+	border-color: var(--color-accent);
+}
+
+.account-auth .woocommerce-form-login__submit,
+.account-auth .woocommerce-form-register__submit {
+	width: 100%;
+	margin-top: var(--space-2);
+}
+
+.account-auth .woocommerce-LostPassword {
+	margin: var(--space-3) 0 0;
+	font-size: 0.875rem;
+}
+
+.account-auth .woocommerce-LostPassword a {
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.account-auth .woocommerce-LostPassword a:hover {
+	color: var(--color-accent-hover);
+}
+
+@media (min-width: 768px) {
+	.account-auth:not(.account-auth--login-only) {
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-6);
+		align-items: stretch;
+	}
+
+	.account-auth--login-only {
+		max-width: 28rem;
+	}
+
+	.account-auth__panel {
+		padding: var(--space-7) var(--space-6);
+	}
+}
+
+/* -------------------------------------------------------------------------
+   Account navigation
+   ------------------------------------------------------------------------- */
+
+.woocommerce-MyAccount-navigation {
+	float: none;
+	width: 100%;
+	margin: 0;
+}
+
+.woocommerce-MyAccount-navigation ul {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	overflow: hidden;
+}
+
+.woocommerce-MyAccount-navigation li {
+	margin: 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.woocommerce-MyAccount-navigation li:last-child {
+	border-bottom: 0;
+}
+
+.woocommerce-MyAccount-navigation a {
+	display: block;
+	padding: 0.875rem 1.125rem;
+	font: var(--font-label);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	text-decoration: none;
+	color: var(--color-text);
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	transition:
+		color var(--transition-base),
+		background-color var(--transition-base);
+}
+
+.woocommerce-MyAccount-navigation a:hover {
+	color: var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.woocommerce-MyAccount-navigation .is-active a,
+.woocommerce-MyAccount-navigation li.is-active a {
+	color: var(--color-accent);
+	background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.woocommerce-MyAccount-content {
+	margin: 0;
+	padding: 0;
+	float: none;
+	width: 100%;
+}
+
+/* -------------------------------------------------------------------------
+   Dashboard
+   ------------------------------------------------------------------------- */
+
+.account-dashboard {
+	display: grid;
+	gap: var(--space-6);
+}
+
+.account-dashboard__heading {
+	margin: 0 0 var(--space-2);
+	font-family: var(--font-family-display);
+	font-size: clamp(1.6rem, 1.35rem + 1vw, 2.25rem);
+	font-weight: 500;
+	line-height: 1.15;
+	color: var(--color-text);
+}
+
+.account-dashboard__sub {
+	margin: 0;
+	color: var(--color-text-muted);
+	font-size: 1rem;
+	line-height: 1.55;
+}
+
+.account-dashboard__recent--empty {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--space-4);
+	padding: var(--space-5);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+}
+
+.account-dashboard__recent--empty p {
+	margin: 0;
+	color: var(--color-text-muted);
+}
+
+.account-dashboard__quick-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+}
+
+.account-dashboard__quick-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.5rem;
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	color: var(--color-text);
+	font: var(--font-label);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.account-dashboard__quick-link:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}
+
+.account-dashboard__coupons-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-bottom: var(--space-4);
+}
+
+.account-dashboard__coupons-title {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: 1.35rem;
+	font-weight: 500;
+}
+
+.account-dashboard__coupons-all {
+	font: var(--font-label);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.account-dashboard__coupons-all:hover {
+	color: var(--color-accent-hover);
+}
+
+/* -------------------------------------------------------------------------
+   Order cards
+   ------------------------------------------------------------------------- */
+
+.account-orders {
+	display: grid;
+	gap: var(--space-4);
+}
+
+.account-order-card {
+	display: grid;
+	gap: var(--space-4);
+	padding: var(--space-5);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+}
+
+.account-order-card__top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+
+.account-order-card__number {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: 1.25rem;
+	font-weight: 500;
+	line-height: 1.25;
+}
+
+.account-order-card__number a {
+	color: var(--color-text);
+	text-decoration: none;
+}
+
+.account-order-card__number a:hover {
+	color: var(--color-accent);
+}
+
+.account-order-card__status {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.5rem;
+	padding: 0.25rem 0.65rem;
+	border-radius: var(--radius-sm);
+	font-family: var(--font-family-base);
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	line-height: 1;
+	color: var(--color-text-inverse);
+	background: var(--color-neutral-500);
+}
+
+.account-order-card__status--completed,
+.account-order-card__status--processing {
+	background: var(--color-accent);
+	color: var(--color-text-inverse);
+}
+
+.account-order-card__status--on-hold,
+.account-order-card__status--pending {
+	background: var(--color-warning);
+	color: var(--color-warning-text);
+}
+
+.account-order-card__status--cancelled,
+.account-order-card__status--refunded,
+.account-order-card__status--failed {
+	background: var(--color-error);
+	color: var(--color-error-text);
+}
+
+.account-order-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-4) var(--space-6);
+	margin: 0;
+	color: var(--color-text);
+}
+
+.account-order-card__meta p {
+	margin: 0;
+}
+
+.account-order-card__label {
+	display: block;
+	margin-bottom: 0.2rem;
+	font: var(--font-label);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+}
+
+.account-order-card__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+}
+
+.account-order-card__actions .button {
+	min-height: 2.5rem;
+}
+
+.account-orders__pagination {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-top: var(--space-6);
+}
+
+/* -------------------------------------------------------------------------
+   Coupons
+   ------------------------------------------------------------------------- */
+
+.account-coupons__header {
+	margin-bottom: var(--space-5);
+}
+
+.account-coupons__title,
+.account-wishlist__title {
+	margin: 0 0 var(--space-2);
+	font-family: var(--font-family-display);
+	font-size: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+	font-weight: 500;
+}
+
+.account-coupons__intro {
+	margin: 0;
+	color: var(--color-text-muted);
+}
+
+.account-coupons__empty {
+	padding: var(--space-6);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	text-align: center;
+	color: var(--color-text-muted);
+}
+
+.account-coupons__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+	gap: var(--space-4);
+}
+
+.account-coupon-card {
+	display: grid;
+	gap: var(--space-3);
+	padding: var(--space-5);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+}
+
+.account-coupon-card__code {
+	margin: 0;
+	font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, monospace;
+	font-size: 1.125rem;
+	font-weight: 600;
+	letter-spacing: 0.12em;
+	color: var(--color-ink, var(--color-text));
+}
+
+.account-coupon-card__discount {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: 1.15rem;
+	color: var(--color-accent);
+}
+
+.account-coupon-card__expiry {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.account-coupon-card__copy {
+	justify-self: start;
+}
+
+.account-coupon-card__copy.is-copied {
+	background: var(--color-accent);
+	border-color: var(--color-accent);
+	color: var(--color-text-inverse);
+}
+
+/* -------------------------------------------------------------------------
+   Addresses + Account details (light restyle of WC defaults)
+   ------------------------------------------------------------------------- */
+
+.woocommerce-account .woocommerce-Address,
+.woocommerce-account .woocommerce-Addresses .woocommerce-Address {
+	padding: var(--space-5);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+}
+
+.woocommerce-account .woocommerce-Address-title {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-3);
+	margin-bottom: var(--space-3);
+}
+
+.woocommerce-account .woocommerce-Address-title h2 {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: 1.25rem;
+	font-weight: 500;
+}
+
+.woocommerce-account .woocommerce-Address-title .edit {
+	font: var(--font-label);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.woocommerce-account .woocommerce-Address-title .edit:hover {
+	color: var(--color-accent-hover);
+}
+
+.woocommerce-account .woocommerce-Address address {
+	margin: 0;
+	font-style: normal;
+	line-height: 1.6;
+	color: var(--color-text);
+}
+
+.woocommerce-account .woocommerce-Addresses {
+	display: grid;
+	gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+	.woocommerce-account .woocommerce-Addresses.col2-set {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.woocommerce-account .woocommerce-Addresses .u-column1,
+	.woocommerce-account .woocommerce-Addresses .u-column2,
+	.woocommerce-account .woocommerce-Addresses .col-1,
+	.woocommerce-account .woocommerce-Addresses .col-2 {
+		float: none;
+		width: auto;
+	}
+}
+
+.woocommerce-account .woocommerce-EditAccountForm .form-row,
+.woocommerce-account .woocommerce-address-fields .form-row {
+	margin: 0 0 var(--space-4);
+}
+
+.woocommerce-account .woocommerce-EditAccountForm label,
+.woocommerce-account .woocommerce-address-fields label,
+.woocommerce-account .woocommerce-MyAccount-content .form-row label {
+	display: block;
+	margin-bottom: var(--space-2);
+	font: var(--font-label);
+	letter-spacing: 0.04em;
+}
+
+.woocommerce-account .woocommerce-EditAccountForm input.input-text,
+.woocommerce-account .woocommerce-EditAccountForm .woocommerce-Input,
+.woocommerce-account .woocommerce-address-fields input.input-text,
+.woocommerce-account .woocommerce-address-fields select,
+.woocommerce-account .woocommerce-MyAccount-content input.input-text,
+.woocommerce-account .woocommerce-MyAccount-content select {
+	width: 100%;
+	min-height: 44px;
+	padding: 12px 14px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	font-family: var(--font-family-base);
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--color-text);
+}
+
+.woocommerce-account .woocommerce-EditAccountForm input.input-text:focus-visible,
+.woocommerce-account .woocommerce-address-fields input.input-text:focus-visible,
+.woocommerce-account .woocommerce-MyAccount-content input.input-text:focus-visible,
+.woocommerce-account .woocommerce-MyAccount-content select:focus-visible {
+	outline: var(--focus-outline-width) solid var(--color-focus);
+	outline-offset: var(--focus-outline-offset);
+	border-color: var(--color-accent);
+}
+
+.woocommerce-account .woocommerce-EditAccountForm .woocommerce-Button,
+.woocommerce-account .woocommerce-address-fields button,
+.woocommerce-account .woocommerce-MyAccount-content button.button {
+	background-color: var(--color-accent);
+	border-color: var(--color-accent);
+	color: var(--color-text-inverse);
+}
+
+.woocommerce-account .woocommerce-EditAccountForm .woocommerce-Button:hover,
+.woocommerce-account .woocommerce-address-fields button:hover,
+.woocommerce-account .woocommerce-MyAccount-content button.button:hover {
+	background-color: var(--color-accent-hover);
+	border-color: var(--color-accent-hover);
+	color: var(--color-text-inverse);
+}
+
+/* Wishlist tab — shared markup styles (standalone page keeps wishlist.css) */
+.account-wishlist .wishlist-page__grid.container {
+	width: 100%;
+	padding-inline: 0;
+}
+
+.account-wishlist .wishlist-page__grid ul.products.shop-grid {
+	margin-top: 0;
+}
+
+.account-wishlist .wishlist-page__signin,
+.account-wishlist .wishlist-page__empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.25rem;
+	min-height: 24vh;
+	padding: 2rem 1rem;
+	text-align: center;
+}
+
+.account-wishlist .wishlist-page__signin-text,
+.account-wishlist .wishlist-page__empty-text {
+	margin: 0;
+	font-family: var(--font-family-base);
+	font-size: 1.05rem;
+	line-height: 1.5;
+	color: var(--color-text);
+}
+
+/* -------------------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+	body.woocommerce-account .woocommerce {
+		gap: var(--space-5);
+	}
+
+	.woocommerce-MyAccount-navigation ul {
+		flex-direction: row;
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.woocommerce-MyAccount-navigation li {
+		flex: 0 0 auto;
+		border-bottom: 0;
+		border-right: 1px solid var(--color-border);
+	}
+
+	.woocommerce-MyAccount-navigation li:last-child {
+		border-right: 0;
+	}
+
+	.woocommerce-MyAccount-navigation a {
+		padding: 0.75rem 1rem;
+		white-space: nowrap;
+	}
+
+	.woocommerce-MyAccount-navigation .is-active a,
+	.woocommerce-MyAccount-navigation li.is-active a {
+		box-shadow: inset 0 -3px 0 var(--color-accent);
+	}
+
+	.account-auth__panel,
+	.account-order-card,
+	.account-coupon-card {
+		padding: var(--space-4);
+	}
+
+	.account-order-card__actions {
+		flex-direction: column;
+	}
+
+	.account-order-card__actions .button {
+		width: 100%;
+	}
+}

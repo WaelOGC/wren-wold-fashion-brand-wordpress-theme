@@ -596,3 +596,30 @@ function fashion_brand_theme_ensure_home_page() {
 	}
 }
 add_action( 'init', 'fashion_brand_theme_ensure_home_page' );
+
+/**
+ * Ensure WooCommerce My Account registration options are enabled.
+ *
+ * Allows account creation on the My Account page, generates usernames from
+ * email, and lets customers choose their own password at signup.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_account_registration() {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		return;
+	}
+
+	$options = array(
+		'woocommerce_enable_myaccount_registration'   => 'yes',
+		'woocommerce_registration_generate_username'  => 'yes',
+		'woocommerce_registration_generate_password'  => 'no',
+	);
+
+	foreach ( $options as $key => $value ) {
+		if ( get_option( $key ) !== $value ) {
+			update_option( $key, $value );
+		}
+	}
+}
+add_action( 'init', 'fashion_brand_theme_ensure_account_registration' );

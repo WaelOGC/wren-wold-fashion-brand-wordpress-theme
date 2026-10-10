@@ -1,0 +1,76 @@
+/**
+ * My Account interactions — coupon copy.
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+( function () {
+	'use strict';
+
+	function copyText( text ) {
+		if ( navigator.clipboard && navigator.clipboard.writeText ) {
+			return navigator.clipboard.writeText( text );
+		}
+
+		return new Promise( function ( resolve, reject ) {
+			var input = document.createElement( 'textarea' );
+			input.value = text;
+			input.setAttribute( 'readonly', '' );
+			input.style.position = 'fixed';
+			input.style.opacity = '0';
+			document.body.appendChild( input );
+			input.select();
+
+			try {
+				var ok = document.execCommand( 'copy' );
+				document.body.removeChild( input );
+				if ( ok ) {
+					resolve();
+				} else {
+					reject();
+				}
+			} catch ( e ) {
+				document.body.removeChild( input );
+				reject( e );
+			}
+		} );
+	}
+
+	function showCopied( button ) {
+		var defaultLabel = button.getAttribute( 'data-label-default' ) || button.textContent;
+		var copiedLabel = button.getAttribute( 'data-label-copied' ) || 'Copied';
+
+		button.textContent = copiedLabel;
+		button.classList.add( 'is-copied' );
+		button.setAttribute( 'aria-live', 'polite' );
+
+		window.setTimeout( function () {
+			button.textContent = defaultLabel;
+			button.classList.remove( 'is-copied' );
+		}, 1800 );
+	}
+
+	document.addEventListener( 'click', function ( event ) {
+		var button = event.target.closest( '[data-coupon-copy]' );
+
+		if ( ! button ) {
+			return;
+		}
+
+		event.preventDefault();
+
+		var code = button.getAttribute( 'data-coupon-code' ) || '';
+
+		if ( ! code ) {
+			return;
+		}
+
+		copyText( code )
+			.then( function () {
+				showCopied( button );
+			} )
+			.catch( function () {
+				/* ignore */
+			} );
+	} );
+}() );
