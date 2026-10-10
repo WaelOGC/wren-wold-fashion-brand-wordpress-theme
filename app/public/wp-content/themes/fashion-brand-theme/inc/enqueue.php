@@ -159,6 +159,23 @@ function fashion_brand_theme_enqueue_assets() {
 		);
 	}
 
+	if ( is_page( 'about' ) ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-about',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/about.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+
+		wp_enqueue_script(
+			'fashion-brand-theme-about-hero',
+			FASHION_BRAND_THEME_URI . '/assets/js/about-hero.js',
+			array(),
+			FASHION_BRAND_THEME_VERSION,
+			true
+		);
+	}
+
 	if ( is_page( 'wishlist' ) ) {
 		wp_enqueue_style(
 			'fashion-brand-theme-wishlist',

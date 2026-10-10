@@ -440,6 +440,28 @@ function fashion_brand_theme_ensure_contact_page() {
 add_action( 'init', 'fashion_brand_theme_ensure_contact_page' );
 
 /**
+ * Ensure the About page exists for nav and page-about.php.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_about_page() {
+	if ( get_page_by_path( 'about' ) ) {
+		return;
+	}
+
+	wp_insert_post(
+		array(
+			'post_title'   => __( 'About', 'fashion-brand-theme' ),
+			'post_name'    => 'about',
+			'post_status'  => 'publish',
+			'post_type'    => 'page',
+			'post_content' => '',
+		)
+	);
+}
+add_action( 'init', 'fashion_brand_theme_ensure_about_page' );
+
+/**
  * Ensure the Wishlist page exists for nav and page-wishlist.php.
  *
  * @return void

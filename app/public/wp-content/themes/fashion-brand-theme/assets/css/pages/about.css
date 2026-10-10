@@ -1,0 +1,224 @@
+/**
+ * About page — full-bleed banner hero + single-column story content.
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+.about-page {
+	background: var(--color-bg);
+}
+
+/* -------------------------------------------------------------------------
+   Reveal animation — content sections
+   ------------------------------------------------------------------------- */
+
+.about-reveal > *,
+.about-reveal.about-page__closing {
+	opacity: 0;
+	transform: translateY(34px);
+	transition:
+		opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+		transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.about-reveal.is-active > *,
+.about-reveal.about-page__closing.is-active {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.about-reveal > *:nth-child(1) {
+	transition-delay: 0.05s;
+}
+
+.about-reveal > *:nth-child(2) {
+	transition-delay: 0.15s;
+}
+
+.about-reveal > *:nth-child(3) {
+	transition-delay: 0.25s;
+}
+
+.about-reveal > *:nth-child(4) {
+	transition-delay: 0.35s;
+}
+
+.about-reveal.about-page__closing {
+	transition-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.about-reveal > *,
+	.about-reveal.is-active > *,
+	.about-reveal.about-page__closing,
+	.about-reveal.about-page__closing.is-active {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}
+
+/* -------------------------------------------------------------------------
+   Hero — short full-bleed banner + parallax image
+   ------------------------------------------------------------------------- */
+
+.about-hero-banner {
+	position: relative;
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	height: 350px;
+	overflow: hidden;
+}
+
+.about-hero-banner__image {
+	position: absolute;
+	inset: -40px 0;
+	background-size: cover;
+	background-position: center left;
+	will-change: transform;
+}
+
+.about-hero-banner__overlay {
+	position: relative;
+	z-index: 2;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 0 48px;
+	text-align: center;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--color-bg) 55%, transparent) 0%,
+		color-mix(in srgb, var(--color-bg) 35%, transparent) 50%,
+		color-mix(in srgb, var(--color-bg) 55%, transparent) 100%
+	);
+}
+
+.about-hero-banner__eyebrow {
+	margin: 0 0 8px;
+	font-family: var(--font-family-base);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-accent);
+}
+
+.about-hero-banner__heading {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: clamp(22px, 3vw, 32px);
+	font-weight: 500;
+	line-height: 1.15;
+	color: var(--color-text);
+}
+
+@media (max-width: 600px) {
+	.about-hero-banner {
+		height: 280px;
+	}
+
+	.about-hero-banner__overlay {
+		padding: 0 24px;
+	}
+}
+
+/* -------------------------------------------------------------------------
+   Content — single column, centered
+   ------------------------------------------------------------------------- */
+
+.about-page__content {
+	max-width: var(--container-wide);
+	margin: 0 auto;
+	padding: 72px 48px 100px;
+}
+
+.about-page__inner {
+	max-width: 680px;
+	margin: 0 auto;
+}
+
+.about-section {
+	margin: 0 0 56px;
+}
+
+.about-section:last-of-type {
+	margin-bottom: 0;
+}
+
+.about-section__heading {
+	margin: 0 0 20px;
+	font-family: var(--font-family-display);
+	font-weight: 500;
+	font-size: 22px;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	color: var(--color-text);
+}
+
+.about-section__text {
+	margin: 0 0 1.15em;
+	font-family: var(--font-family-base);
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 1.7;
+	color: var(--color-text-muted);
+}
+
+.about-section__text:last-child {
+	margin-bottom: 0;
+}
+
+.about-section__text em {
+	font-style: italic;
+	color: var(--color-text);
+}
+
+.about-page__closing {
+	margin: 64px 0 0;
+	padding-top: 32px;
+	border-top: 1px solid var(--color-border);
+	font-family: var(--font-family-display);
+	font-size: clamp(18px, 2.2vw, 22px);
+	font-weight: 500;
+	line-height: 1.35;
+	letter-spacing: -0.01em;
+	color: var(--color-text);
+	text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Responsive — same breakpoints as contact.css
+   ------------------------------------------------------------------------- */
+
+@media (min-width: 1024px) {
+	.about-page__content {
+		padding: 88px 48px 120px;
+	}
+
+	.about-section {
+		margin-bottom: 72px;
+	}
+
+	.about-page__closing {
+		margin-top: 80px;
+		padding-top: 40px;
+	}
+}
+
+@media (max-width: 767px) {
+	.about-page__content {
+		padding: 48px 20px 80px;
+	}
+
+	.about-section {
+		margin-bottom: 48px;
+	}
+
+	.about-page__closing {
+		margin-top: 48px;
+		padding-top: 28px;
+	}
+}
