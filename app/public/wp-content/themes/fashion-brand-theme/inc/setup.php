@@ -287,6 +287,66 @@ function fashion_brand_theme_ensure_product_subcategories() {
 				'wpseo_desc'    => "Shop women's bodysuits at WREN WOLD — sleek, seamless styles for a clean silhouette.",
 			),
 		),
+		'pants-playsuits'     => array(
+			'parent'      => 'pants',
+			'name'        => 'Playsuits',
+			'description' => 'One-piece playsuits that combine the ease of a dress with the versatility of shorts.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's playsuits",
+				'wpseo_title'   => "Women's Playsuits | WREN WOLD",
+				'wpseo_desc'    => "Shop women's playsuits at WREN WOLD — one-piece ease with everyday versatility.",
+			),
+		),
+		'knitwear-cardigans'  => array(
+			'parent'      => 'knitwear',
+			'name'        => 'Cardigans & Ponchos',
+			'description' => 'Open-front cardigans and relaxed ponchos for easy layering over everyday pieces.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's cardigans",
+				'wpseo_title'   => "Women's Cardigans & Ponchos | WREN WOLD",
+				'wpseo_desc'    => "Shop women's cardigans and ponchos at WREN WOLD — easy knit layers for everyday wear.",
+			),
+		),
+		'tshirts-tanks'       => array(
+			'parent'      => 't-shirts',
+			'name'        => 'Tank Tops & Singlets',
+			'description' => 'Lightweight tank tops and singlets made for layering or wearing alone.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's tank tops",
+				'wpseo_title'   => "Women's Tank Tops & Singlets | WREN WOLD",
+				'wpseo_desc'    => "Shop women's tank tops and singlets at WREN WOLD — lightweight layers for every season.",
+			),
+		),
+		'coats-vests'         => array(
+			'parent'      => 'coats',
+			'name'        => 'Vests',
+			'description' => 'Sleeveless vests that add structure and warmth without the bulk of a full coat.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's vests",
+				'wpseo_title'   => "Women's Vests | WREN WOLD",
+				'wpseo_desc'    => "Shop women's vests at WREN WOLD — structured warmth without the bulk of a full coat.",
+			),
+		),
+		'knitwear-boleros'    => array(
+			'parent'      => 'knitwear',
+			'name'        => 'Boleros & Shrugs',
+			'description' => 'Cropped boleros and shrugs that layer neatly over dresses and tops.',
+			'yoast'       => array(
+				'wpseo_focuskw' => "women's boleros",
+				'wpseo_title'   => "Women's Boleros & Shrugs | WREN WOLD",
+				'wpseo_desc'    => "Shop women's boleros and shrugs at WREN WOLD — cropped layers for dresses and tops.",
+			),
+		),
+		'pants-casual'        => array(
+			'parent'      => 'pants',
+			'name'        => 'Casual Pants',
+			'description' => 'Relaxed everyday pants built for comfort without losing a tailored look.',
+			'yoast'       => array(
+				'wpseo_focuskw' => 'casual pants',
+				'wpseo_title'   => 'Casual Pants for Women | WREN WOLD',
+				'wpseo_desc'    => 'Shop casual pants at WREN WOLD — relaxed everyday comfort with a tailored look.',
+			),
+		),
 	);
 
 	foreach ( $subcategories as $slug => $subcategory ) {
