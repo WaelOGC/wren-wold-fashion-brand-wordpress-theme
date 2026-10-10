@@ -9,23 +9,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$categories     = fashion_brand_theme_get_homepage_categories();
-$category_image = fashion_brand_theme_homepage_image_uri( 'categories/categories-motion-01.jpg' );
+$categories            = fashion_brand_theme_get_homepage_categories();
+$category_image        = fashion_brand_theme_homepage_image_uri( 'categories/categories-rack-01.webp' );
+$category_image_mobile = fashion_brand_theme_homepage_image_uri( 'categories/categories-rack-01-mobile.webp' );
 ?>
 <section
 	class="scene cat-scene"
 	data-title="<?php echo esc_attr__( 'The Capsule', 'fashion-brand-theme' ); ?>"
 	aria-labelledby="homepage-categories-heading"
 >
-	<img
-		class="scene-img"
-		src="<?php echo esc_url( $category_image ); ?>"
-		alt=""
-		width="1200"
-		height="1600"
-		loading="lazy"
-		decoding="async"
-	>
+	<picture>
+		<source media="(max-width: 860px)" srcset="<?php echo esc_url( $category_image_mobile ); ?>">
+		<img
+			class="scene-img"
+			src="<?php echo esc_url( $category_image ); ?>"
+			alt=""
+			width="1200"
+			height="1600"
+			loading="lazy"
+			decoding="async"
+		>
+	</picture>
 	<div class="scene-top-scrim" aria-hidden="true"></div>
 	<div class="scene-scrim scrim-full" aria-hidden="true"></div>
 	<div class="scene-copy">

@@ -9,23 +9,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$collection_image = fashion_brand_theme_homepage_image_uri( 'featured-collection/featured-collection-golden-hour-01.jpg' );
-$collections_url  = fashion_brand_theme_get_page_url( 'collections' );
+$collection_image        = fashion_brand_theme_homepage_image_uri( 'featured-collection/featured-collection-urban-01.webp' );
+$collection_image_mobile = fashion_brand_theme_homepage_image_uri( 'featured-collection/featured-collection-urban-01-mobile.webp' );
+$collections_url         = fashion_brand_theme_get_page_url( 'collections' );
 ?>
 <section
 	class="scene"
 	data-title="<?php echo esc_attr__( 'The Seasonal Edit', 'fashion-brand-theme' ); ?>"
 	aria-labelledby="homepage-collection-heading"
 >
-	<img
-		class="scene-img"
-		src="<?php echo esc_url( $collection_image ); ?>"
-		alt=""
-		width="1920"
-		height="1280"
-		loading="lazy"
-		decoding="async"
-	>
+	<picture>
+		<source media="(max-width: 860px)" srcset="<?php echo esc_url( $collection_image_mobile ); ?>">
+		<img
+			class="scene-img"
+			src="<?php echo esc_url( $collection_image ); ?>"
+			alt=""
+			width="1920"
+			height="1280"
+			loading="lazy"
+			decoding="async"
+		>
+	</picture>
 	<div class="scene-top-scrim" aria-hidden="true"></div>
 	<div class="scene-scrim scrim-side" aria-hidden="true"></div>
 	<div class="scene-copy">

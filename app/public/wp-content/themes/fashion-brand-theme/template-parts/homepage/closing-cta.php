@@ -9,22 +9,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$closing_image = fashion_brand_theme_homepage_image_uri( 'closing-cta/closing-cta-departure-01.jpg' );
+$closing_image        = fashion_brand_theme_homepage_image_uri( 'closing-cta/closing-cta-cafe-01.webp' );
+$closing_image_mobile = fashion_brand_theme_homepage_image_uri( 'closing-cta/closing-cta-cafe-01-mobile.webp' );
 ?>
 <section
 	class="scene"
 	data-title="<?php echo esc_attr__( 'Begin', 'fashion-brand-theme' ); ?>"
 	aria-labelledby="homepage-cta-heading"
 >
-	<img
-		class="scene-img"
-		src="<?php echo esc_url( $closing_image ); ?>"
-		alt=""
-		width="1920"
-		height="1280"
-		loading="lazy"
-		decoding="async"
-	>
+	<picture>
+		<source media="(max-width: 860px)" srcset="<?php echo esc_url( $closing_image_mobile ); ?>">
+		<img
+			class="scene-img"
+			src="<?php echo esc_url( $closing_image ); ?>"
+			alt=""
+			width="1920"
+			height="1280"
+			loading="lazy"
+			decoding="async"
+		>
+	</picture>
 	<div class="scene-top-scrim" aria-hidden="true"></div>
 	<div class="scene-scrim scrim-bottom" aria-hidden="true"></div>
 	<div class="scene-copy">
