@@ -43,7 +43,9 @@ function fashion_brand_theme_get_product_category_slugs() {
 		'pants'    => __( 'Pants', 'fashion-brand-theme' ),
 		'skirts'   => __( 'Skirts', 'fashion-brand-theme' ),
 		'dresses'  => __( 'Dresses', 'fashion-brand-theme' ),
-		'coats'    => __( 'Coats', 'fashion-brand-theme' ),
+		'coats'     => __( 'Coats', 'fashion-brand-theme' ),
+		'maternity' => __( 'Maternity', 'fashion-brand-theme' ),
+		'plus-size' => __( 'Plus Size', 'fashion-brand-theme' ),
 	);
 }
 
