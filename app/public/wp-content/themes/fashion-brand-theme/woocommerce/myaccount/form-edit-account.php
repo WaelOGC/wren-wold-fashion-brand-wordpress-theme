@@ -21,14 +21,9 @@ do_action( 'woocommerce_before_edit_account_form' );
 
 		<div class="avatar-row">
 			<?php fashion_brand_theme_render_account_avatar( array( 'size' => 'profile' ) ); ?>
-			<label class="text-link avatar-change" for="account_avatar"><?php esc_html_e( 'Change photo ↗', 'fashion-brand-theme' ); ?></label>
-			<input
-				type="file"
-				name="account_avatar"
-				id="account_avatar"
-				class="screen-reader-text"
-				accept="image/jpeg,image/png,image/gif,image/webp"
-			/>
+			<button type="button" class="text-link avatar-change" data-avatar-open>
+				<?php esc_html_e( 'Change photo ↗', 'fashion-brand-theme' ); ?>
+			</button>
 		</div>
 
 		<div class="account-form">
@@ -90,5 +85,41 @@ do_action( 'woocommerce_before_edit_account_form' );
 		</div>
 	</div>
 </form>
+
+<dialog class="avatar-modal" id="avatar-modal" aria-labelledby="avatar-modal-title">
+	<div class="avatar-modal__panel">
+		<button type="button" class="avatar-modal__close" data-avatar-close aria-label="<?php esc_attr_e( 'Close', 'fashion-brand-theme' ); ?>">×</button>
+		<div class="eyebrow"><?php esc_html_e( 'Your profile', 'fashion-brand-theme' ); ?></div>
+		<h2 id="avatar-modal-title"><?php esc_html_e( 'Change photo', 'fashion-brand-theme' ); ?></h2>
+		<p class="avatar-modal__lede"><?php esc_html_e( 'Choose a clear portrait. JPG, PNG, GIF or WebP.', 'fashion-brand-theme' ); ?></p>
+
+		<div class="avatar-modal__drop" data-avatar-drop tabindex="0" role="button" aria-controls="account_avatar">
+			<div class="avatar-modal__preview" data-avatar-preview hidden></div>
+			<div class="avatar-modal__drop-copy" data-avatar-drop-copy>
+				<span class="avatar-modal__drop-label"><?php esc_html_e( 'Drop an image here', 'fashion-brand-theme' ); ?></span>
+				<span class="avatar-modal__drop-sub"><?php esc_html_e( 'or click to browse', 'fashion-brand-theme' ); ?></span>
+			</div>
+		</div>
+
+		<p class="avatar-modal__error" data-avatar-error hidden></p>
+
+		<div class="avatar-modal__actions">
+			<button type="button" class="avatar-modal__cancel text-link" data-avatar-close><?php esc_html_e( 'Cancel', 'fashion-brand-theme' ); ?></button>
+			<button type="button" class="save avatar-modal__save" data-avatar-save disabled>
+				<?php esc_html_e( 'Save photo', 'fashion-brand-theme' ); ?> ↗
+			</button>
+		</div>
+
+		<input
+			type="file"
+			id="account_avatar"
+			name="account_avatar"
+			class="fbt-hidden-file"
+			accept="image/jpeg,image/png,image/gif,image/webp"
+			tabindex="-1"
+			aria-hidden="true"
+		/>
+	</div>
+</dialog>
 
 <?php do_action( 'woocommerce_after_edit_account_form' ); ?>

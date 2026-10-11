@@ -79,6 +79,7 @@ body.woocommerce-account.logged-in .site-content {
 	width: 100%;
 	max-width: none;
 	padding-inline: 0;
+	padding-block: 0;
 }
 
 body.woocommerce-account.logged-in .entry-title {
@@ -144,7 +145,7 @@ body.woocommerce-account .hero-kicker {
 }
 
 body.woocommerce-account .hero h1 {
-	font: 400 clamp(3rem, 7vw, 5.5rem) / 0.9 var(--serif);
+	font: 400 clamp(2.5rem, 5vw, 3.875rem) / 0.9 var(--serif);
 	letter-spacing: -0.04em;
 	margin: 0;
 	color: var(--ink);
@@ -153,7 +154,7 @@ body.woocommerce-account .hero h1 {
 body.woocommerce-account .hero h1 em {
 	color: var(--green);
 	font-weight: 400;
-	font-style: italic;
+	font-style: normal;
 }
 
 body.woocommerce-account .hero-aside {
@@ -696,6 +697,173 @@ body.woocommerce-account .avatar-row {
 	align-items: center;
 	gap: 1.125rem;
 	margin: 0.9375rem 0 1.5625rem;
+}
+
+body.woocommerce-account .avatar-change {
+	border: 0;
+	background: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+}
+
+/* Always-hidden file input — never use .screen-reader-text (has :focus reveal). */
+body.woocommerce-account .fbt-hidden-file {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	clip-path: inset(50%) !important;
+	border: 0 !important;
+	white-space: nowrap !important;
+	appearance: none !important;
+}
+
+/* -------------------------------------------------------------------------
+   Avatar change modal
+   ------------------------------------------------------------------------- */
+
+body.woocommerce-account .avatar-modal {
+	position: fixed;
+	inset: 0;
+	width: min(100% - 2rem, 28rem);
+	max-width: calc(100vw - 2rem);
+	margin: auto;
+	padding: 0;
+	border: 1px solid var(--line);
+	background: transparent;
+	color: var(--ink);
+}
+
+body.woocommerce-account .avatar-modal::backdrop {
+	background: rgb(32 39 32 / 45%);
+}
+
+html.avatar-modal-open {
+	overflow: hidden;
+}
+
+body.woocommerce-account .avatar-modal__panel {
+	position: relative;
+	padding: 2rem 1.75rem 1.5rem;
+	background: var(--white);
+	border: 1px solid var(--line);
+	box-shadow: 0 18px 48px rgb(32 39 32 / 12%);
+}
+
+body.woocommerce-account .avatar-modal__close {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.85rem;
+	border: 0;
+	background: transparent;
+	color: var(--muted);
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+body.woocommerce-account .avatar-modal__close:hover {
+	color: var(--ink);
+}
+
+body.woocommerce-account .avatar-modal h2 {
+	font: 400 1.75rem / 1.1 var(--serif);
+	margin: 0 0 0.65rem;
+}
+
+body.woocommerce-account .avatar-modal__lede {
+	margin: 0 0 1.35rem;
+	font-size: 0.75rem;
+	line-height: 1.7;
+	color: var(--muted);
+}
+
+body.woocommerce-account .avatar-modal__drop {
+	display: grid;
+	place-items: center;
+	min-height: 11.5rem;
+	padding: 1.25rem;
+	border: 1px dashed var(--green);
+	background: color-mix(in srgb, var(--sage) 55%, var(--white));
+	cursor: pointer;
+	transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+body.woocommerce-account .avatar-modal__drop:hover,
+body.woocommerce-account .avatar-modal__drop.is-dragover,
+body.woocommerce-account .avatar-modal__drop:focus-visible {
+	border-color: var(--ink);
+	background: var(--sage);
+	outline: none;
+}
+
+body.woocommerce-account .avatar-modal__drop-copy {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	text-align: center;
+}
+
+body.woocommerce-account .avatar-modal__drop-label {
+	font-family: var(--serif);
+	font-size: 1.125rem;
+	color: var(--ink);
+}
+
+body.woocommerce-account .avatar-modal__drop-sub {
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+body.woocommerce-account .avatar-modal__preview {
+	width: 100%;
+	display: grid;
+	place-items: center;
+}
+
+body.woocommerce-account .avatar-modal__preview-img {
+	width: 7.5rem;
+	height: 7.5rem;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 1px solid rgb(63 83 72 / 25%);
+}
+
+body.woocommerce-account .avatar-modal__error {
+	margin: 0.85rem 0 0;
+	font-size: 0.75rem;
+	color: var(--red);
+}
+
+body.woocommerce-account .avatar-modal__actions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 1.35rem;
+}
+
+body.woocommerce-account .avatar-modal__cancel {
+	border: 0;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+body.woocommerce-account .avatar-modal__save:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+body.woocommerce-account .avatar-modal__save.is-loading {
+	opacity: 0.7;
 }
 
 body.woocommerce-account .field {

@@ -233,6 +233,17 @@ function fashion_brand_theme_enqueue_assets() {
 			FASHION_BRAND_THEME_VERSION,
 			true
 		);
+
+		wp_localize_script(
+			'fashion-brand-theme-account',
+			'fashionBrandThemeAccount',
+			array(
+				'ajaxUrl'     => admin_url( 'admin-ajax.php' ),
+				'nonce'       => wp_create_nonce( 'fashion_brand_theme_avatar_upload' ),
+				'invalidType' => __( 'Please choose a JPG, PNG, GIF or WebP image.', 'fashion-brand-theme' ),
+				'uploadError' => __( 'Upload failed. Please try again.', 'fashion-brand-theme' ),
+			)
+		);
 	}
 
 	if ( is_page( 'wishlist' ) ) {

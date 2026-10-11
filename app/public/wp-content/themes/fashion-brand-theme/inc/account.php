@@ -497,7 +497,11 @@ function fashion_brand_theme_get_account_avatar_url( $user_id = 0 ) {
 		return '';
 	}
 
-	$url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+	$url = wp_get_attachment_image_url( $attachment_id, 'medium' );
+
+	if ( ! $url ) {
+		$url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+	}
 
 	return $url ? $url : '';
 }
@@ -568,7 +572,7 @@ function fashion_brand_theme_render_account_avatar( $args = array() ) {
 		$classes[] = 'avatar--has-img';
 	}
 
-	echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '">';
+	echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '" data-account-avatar data-initials="' . esc_attr( $initials ) . '">';
 
 	if ( $url ) {
 		printf(
@@ -766,24 +770,21 @@ function fashion_brand_theme_render_account_order_card( $order, $args = array() 
 }
 
 /**
- * Add multipart encoding to the edit-account form for avatar uploads.
+ * Process an account avatar upload for a user.
  *
- * @return void
+ * @param int   $user_id User ID.
+ * @param array $file    Single $_FILES entry.
+ * @return array|WP_Error { attachment_id: int, url: string }
  */
-function fashion_brand_theme_edit_account_form_enctype() {
-	echo ' enctype="multipart/form-data"';
-}
-add_action( 'woocommerce_edit_account_form_tag', 'fashion_brand_theme_edit_account_form_enctype' );
+function fashion_brand_theme_process_account_avatar_upload( $user_id, $file ) {
+	$user_id = (int) $user_id;
 
-/**
- * Save uploaded account avatar on account details save.
- *
- * @param int $user_id User ID.
- * @return void
- */
-function fashion_brand_theme_save_account_avatar( $user_id ) {
-	if ( empty( $_FILES['account_avatar']['name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		return;
+	if ( ! $user_id || empty( $file['name'] ) || empty( $file['tmp_name'] ) ) {
+		return new WP_Error( 'avatar_missing', __( 'Please choose an image to upload.', 'fashion-brand-theme' ) );
+	}
+
+	if ( ! empty( $file['error'] ) ) {
+		return new WP_Error( 'avatar_upload_error', __( 'The image could not be uploaded. Please try again.', 'fashion-brand-theme' ) );
 	}
 
 	if ( ! function_exists( 'wp_handle_upload' ) ) {
@@ -793,8 +794,6 @@ function fashion_brand_theme_save_account_avatar( $user_id ) {
 	if ( ! function_exists( 'wp_generate_attachment_metadata' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/image.php';
 	}
-
-	$file = $_FILES['account_avatar']; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 	$allowed = array(
 		'jpg|jpeg|jpe' => 'image/jpeg',
@@ -812,8 +811,7 @@ function fashion_brand_theme_save_account_avatar( $user_id ) {
 	);
 
 	if ( isset( $upload['error'] ) ) {
-		wc_add_notice( $upload['error'], 'error' );
-		return;
+		return new WP_Error( 'avatar_upload_error', $upload['error'] );
 	}
 
 	$attachment = array(
@@ -821,12 +819,13 @@ function fashion_brand_theme_save_account_avatar( $user_id ) {
 		'post_title'     => sanitize_file_name( wp_basename( $upload['file'] ) ),
 		'post_content'   => '',
 		'post_status'    => 'inherit',
+		'post_author'    => $user_id,
 	);
 
 	$attachment_id = wp_insert_attachment( $attachment, $upload['file'] );
 
 	if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
-		return;
+		return new WP_Error( 'avatar_attach_error', __( 'The image could not be saved. Please try again.', 'fashion-brand-theme' ) );
 	}
 
 	$metadata = wp_generate_attachment_metadata( $attachment_id, $upload['file'] );
@@ -836,8 +835,90 @@ function fashion_brand_theme_save_account_avatar( $user_id ) {
 
 	update_user_meta( $user_id, FASHION_BRAND_THEME_ACCOUNT_AVATAR_META, $attachment_id );
 
-	if ( $previous_id && $previous_id !== $attachment_id ) {
+	if ( $previous_id && $previous_id !== (int) $attachment_id ) {
 		wp_delete_attachment( $previous_id, true );
+	}
+
+	$url = wp_get_attachment_image_url( $attachment_id, 'medium' );
+
+	if ( ! $url ) {
+		$url = wp_get_attachment_image_url( $attachment_id, 'thumbnail' );
+	}
+
+	if ( ! $url ) {
+		$url = $upload['url'];
+	}
+
+	return array(
+		'attachment_id' => (int) $attachment_id,
+		'url'           => $url,
+	);
+}
+
+/**
+ * Save uploaded account avatar on account details save (legacy form fallback).
+ *
+ * @param int $user_id User ID.
+ * @return void
+ */
+function fashion_brand_theme_save_account_avatar( $user_id ) {
+	if ( empty( $_FILES['account_avatar']['name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return;
+	}
+
+	$result = fashion_brand_theme_process_account_avatar_upload(
+		$user_id,
+		$_FILES['account_avatar'] // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	);
+
+	if ( is_wp_error( $result ) ) {
+		wc_add_notice( $result->get_error_message(), 'error' );
 	}
 }
 add_action( 'woocommerce_save_account_details', 'fashion_brand_theme_save_account_avatar', 10, 1 );
+
+/**
+ * AJAX: upload account avatar immediately from the change-photo modal.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ajax_upload_account_avatar() {
+	if ( ! is_user_logged_in() ) {
+		wp_send_json_error(
+			array( 'message' => __( 'You must be signed in to change your photo.', 'fashion-brand-theme' ) ),
+			401
+		);
+	}
+
+	check_ajax_referer( 'fashion_brand_theme_avatar_upload', 'nonce' );
+
+	$user_id = get_current_user_id();
+
+	if ( empty( $_FILES['account_avatar'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		wp_send_json_error(
+			array( 'message' => __( 'Please choose an image to upload.', 'fashion-brand-theme' ) ),
+			400
+		);
+	}
+
+	$result = fashion_brand_theme_process_account_avatar_upload(
+		$user_id,
+		$_FILES['account_avatar'] // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	);
+
+	if ( is_wp_error( $result ) ) {
+		wp_send_json_error(
+			array( 'message' => $result->get_error_message() ),
+			400
+		);
+	}
+
+	wp_send_json_success(
+		array(
+			'url'           => $result['url'],
+			'attachment_id' => $result['attachment_id'],
+			'message'       => __( 'Photo saved.', 'fashion-brand-theme' ),
+		)
+	);
+}
+add_action( 'wp_ajax_fashion_brand_theme_upload_avatar', 'fashion_brand_theme_ajax_upload_account_avatar' );
