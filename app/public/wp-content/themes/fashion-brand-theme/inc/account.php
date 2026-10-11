@@ -296,10 +296,9 @@ add_action( 'woocommerce_account_coupons_endpoint', 'fashion_brand_theme_account
  */
 function fashion_brand_theme_account_wishlist_endpoint() {
 	$wishlist_ids = fashion_brand_theme_get_wishlist_ids();
-	$shop_url     = fashion_brand_theme_get_shop_url();
 	$count        = count( $wishlist_ids );
 	?>
-	<div class="block">
+	<div class="block wishlist-account-block">
 		<div class="block-head">
 			<h2><?php esc_html_e( 'Saved for later', 'fashion-brand-theme' ); ?></h2>
 			<span class="micro">
@@ -314,35 +313,7 @@ function fashion_brand_theme_account_wishlist_endpoint() {
 				?>
 			</span>
 		</div>
-		<?php if ( empty( $wishlist_ids ) ) : ?>
-			<p class="block-empty"><?php esc_html_e( 'Your wishlist is empty — save pieces you love and they will appear here.', 'fashion-brand-theme' ); ?></p>
-			<a class="text-link" href="<?php echo esc_url( $shop_url ); ?>"><?php esc_html_e( 'Explore the shop ↗', 'fashion-brand-theme' ); ?></a>
-		<?php else : ?>
-			<div class="wishlist">
-				<?php
-				foreach ( $wishlist_ids as $product_id ) {
-					$product = wc_get_product( $product_id );
-
-					if ( ! $product || ! $product->is_visible() ) {
-						continue;
-					}
-					?>
-					<a class="wishlist-item" href="<?php echo esc_url( $product->get_permalink() ); ?>">
-						<div class="product-image">
-							<?php
-							if ( $product->get_image_id() ) {
-								echo $product->get_image( 'woocommerce_thumbnail', array( 'class' => 'product-image__img' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-							}
-							?>
-						</div>
-						<div class="product-name"><?php echo esc_html( $product->get_name() ); ?></div>
-						<div class="product-price"><?php echo wp_kses_post( $product->get_price_html() ); ?></div>
-					</a>
-					<?php
-				}
-				?>
-			</div>
-		<?php endif; ?>
+		<?php get_template_part( 'template-parts/account/wishlist', 'content' ); ?>
 	</div>
 	<?php
 }
@@ -922,3 +893,61 @@ function fashion_brand_theme_ajax_upload_account_avatar() {
 	);
 }
 add_action( 'wp_ajax_fashion_brand_theme_upload_avatar', 'fashion_brand_theme_ajax_upload_account_avatar' );
+
+/**
+ * Render the shared auth-screen visual panel (login / register / lost / reset).
+ *
+ * @return void
+ */
+function fashion_brand_theme_render_auth_visual() {
+	$logo = fashion_brand_theme_get_brand_asset_uri( 'logo/wren-wold-logo-white.svg' );
+	?>
+	<div class="auth-visual">
+		<div class="tag"><?php esc_html_e( 'WREN WOLD / Member space', 'fashion-brand-theme' ); ?></div>
+		<?php if ( $logo ) : ?>
+			<div class="auth-visual__logo" aria-hidden="true">
+				<img src="<?php echo esc_url( $logo ); ?>" alt="" width="200" height="76" decoding="async" />
+			</div>
+		<?php endif; ?>
+		<div class="visual-copy">
+			<small><?php esc_html_e( 'Made for the considered life', 'fashion-brand-theme' ); ?></small>
+			<h2><?php esc_html_e( 'Less, but', 'fashion-brand-theme' ); ?><br><em><?php esc_html_e( 'better.', 'fashion-brand-theme' ); ?></em></h2>
+		</div>
+		<div class="bottom-note"><?php esc_html_e( 'Personal account · Private access', 'fashion-brand-theme' ); ?></div>
+	</div>
+	<?php
+}
+
+/**
+ * Before WC validates account details, ensure display name is present in POST
+ * (the theme collapses that field visually, so it can be blank for new users).
+ *
+ * @return void
+ */
+function fashion_brand_theme_prefill_account_display_name_post() {
+	if ( empty( $_POST['action'] ) || 'save_account_details' !== $_POST['action'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return;
+	}
+
+	if ( ! empty( $_POST['account_display_name'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return;
+	}
+
+	$first = ! empty( $_POST['account_first_name'] ) ? wc_clean( wp_unslash( $_POST['account_first_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$last  = ! empty( $_POST['account_last_name'] ) ? wc_clean( wp_unslash( $_POST['account_last_name'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+	$email = ! empty( $_POST['account_email'] ) ? wc_clean( wp_unslash( $_POST['account_email'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+	$fallback = trim( $first . ' ' . $last );
+
+	if ( '' === $fallback && $email ) {
+		$fallback = $email;
+	}
+
+	if ( '' === $fallback ) {
+		$current  = wp_get_current_user();
+		$fallback = ( $current && $current->user_login ) ? $current->user_login : 'member';
+	}
+
+	$_POST['account_display_name'] = $fallback;
+}
+add_action( 'wp_loaded', 'fashion_brand_theme_prefill_account_display_name_post', 5 );

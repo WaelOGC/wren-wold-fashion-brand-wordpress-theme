@@ -1,5 +1,5 @@
 /**
- * Wishlist page styles.
+ * Wishlist page styles (standalone + My Account tab).
  *
  * @package Fashion_Brand_Theme
  */
@@ -45,17 +45,192 @@
 	color: var(--color-text);
 }
 
+.wishlist-page__toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	margin: 0 0 1.25rem;
+}
+
+.wishlist-page__toolbar-label {
+	font-size: 0.625rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+}
+
+.wishlist-page__view-btns {
+	display: inline-flex;
+	border: var(--border-field);
+	border-radius: var(--radius-field);
+	overflow: hidden;
+	background: var(--color-surface);
+}
+
+.wishlist-page__view-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0.55rem 0.85rem;
+	border: 0;
+	border-right: 1px solid var(--color-border);
+	background: transparent;
+	color: var(--color-text-muted);
+	font-family: var(--font-family-base);
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.wishlist-page__view-btn:last-child {
+	border-right: 0;
+}
+
+.wishlist-page__view-btn svg {
+	flex-shrink: 0;
+}
+
+.wishlist-page__view-btn:hover,
+.wishlist-page__view-btn:focus-visible {
+	color: var(--color-ink);
+	outline: none;
+}
+
+.wishlist-page__view-btn.is-active {
+	background: var(--color-accent);
+	color: var(--color-text-inverse);
+}
+
 .wishlist-page__grid {
 	padding-inline: 0;
+}
+
+/* Account tab: keep empty state compact inside .block */
+.wishlist-account-block .wishlist-page__empty,
+.wishlist-account-block .wishlist-page__signin {
+	min-height: 0;
+	padding: 1rem 0 0.25rem;
+	align-items: flex-start;
+	text-align: left;
 }
 
 .wishlist-page__grid ul.products.shop-grid {
 	margin-top: 0;
 }
 
+/* -------------------------------------------------------------------------
+   List view — horizontal rows (scoped; does not change shop cards elsewhere)
+   ------------------------------------------------------------------------- */
+
+html[data-wishlist-view="list"] .wishlist-page__grid ul.products.shop-grid,
+html[data-wishlist-view="list"] .wishlist-page__grid ul.products {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid ul.products.shop-grid li.product,
+html[data-wishlist-view="list"] .wishlist-page__grid ul.products li.product {
+	width: 100% !important;
+	max-width: none !important;
+	margin: 0 !important;
+	padding: 0.9375rem 0;
+	border-top: 1px solid var(--color-border);
+	float: none !important;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid ul.products li.product:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card {
+	position: relative;
+	display: grid;
+	grid-template-columns: 5.5rem minmax(0, 1fr);
+	align-items: center;
+	gap: 1rem;
+	padding-right: 3.25rem;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card__media {
+	position: static; /* let wishlist position against the row, not the thumb */
+	width: 5.5rem;
+	aspect-ratio: 3 / 4;
+	margin: 0;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card__badges,
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card__swatches,
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card__cart {
+	display: none;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card-info {
+	min-width: 0;
+	padding: 0;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card-info__row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.35rem 1rem;
+	width: 100%;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card-name {
+	font-size: 0.9375rem;
+}
+
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card-price {
+	font-size: 0.8125rem;
+	color: var(--color-text-muted);
+	margin-left: auto;
+}
+
+/* Wishlist control lives inside media in the card markup — pin it to the row end. */
+html[data-wishlist-view="list"] .wishlist-page__grid .product-card__wishlist {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	left: auto;
+	bottom: auto;
+	width: 2.5rem;
+	height: 2.5rem;
+	margin: 0;
+	opacity: 1;
+	transform: translateY(-50%);
+	z-index: 2;
+	color: var(--color-ink);
+	filter: none;
+}
+
 @media (max-width: 900px) {
 	.wishlist-page {
 		width: 100%;
 		padding: 1.5rem 16px calc(100px + env(safe-area-inset-bottom, 0px));
+	}
+
+	html[data-wishlist-view="list"] .wishlist-page__grid .product-card {
+		grid-template-columns: 4.25rem minmax(0, 1fr);
+		gap: 0.75rem;
+		padding-right: 2.75rem;
+	}
+
+	html[data-wishlist-view="list"] .wishlist-page__grid .product-card__media {
+		width: 4.25rem;
+	}
+
+	.wishlist-page__view-btn span {
+		display: none;
 	}
 }

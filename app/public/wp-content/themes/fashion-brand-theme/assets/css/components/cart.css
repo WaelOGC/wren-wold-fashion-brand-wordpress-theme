@@ -212,8 +212,8 @@
 	min-width: 0;
 	min-height: 40px;
 	padding: 10px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
+	border: var(--border-field);
+	border-radius: var(--radius-field);
 	background: var(--color-surface);
 	font-family: var(--font-family-base);
 	font-size: 14px;
@@ -422,8 +422,8 @@
 }
 
 .wc-block-components-totals-coupon__form .wc-block-components-totals-coupon__input.wc-block-components-text-input input[type="text"] {
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
+	border: var(--border-field);
+	border-radius: var(--radius-field);
 	background: var(--color-surface);
 	color: var(--color-text);
 	font-family: var(--font-family-base);

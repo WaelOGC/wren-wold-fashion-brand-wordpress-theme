@@ -34,6 +34,30 @@ elseif ( empty( $wishlist_ids ) ) :
 	<?php
 else :
 	?>
+	<script>
+	(function () {
+		try {
+			var v = localStorage.getItem('wrenwold_wishlist_view');
+			if (v === 'list' || v === 'grid') {
+				document.documentElement.setAttribute('data-wishlist-view', v);
+			}
+		} catch (e) {}
+	})();
+	</script>
+	<div class="wishlist-page__toolbar" data-wishlist-view-toggle>
+		<span class="wishlist-page__toolbar-label"><?php esc_html_e( 'View', 'fashion-brand-theme' ); ?></span>
+		<div class="wishlist-page__view-btns" role="group" aria-label="<?php esc_attr_e( 'Wishlist layout', 'fashion-brand-theme' ); ?>">
+			<button type="button" class="wishlist-page__view-btn is-active" data-wishlist-view="grid" aria-pressed="true" aria-label="<?php esc_attr_e( 'Grid view', 'fashion-brand-theme' ); ?>">
+				<?php echo fashion_brand_theme_get_icon( 'layout-grid', array( 'width' => 18, 'height' => 18 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<span><?php esc_html_e( 'Grid', 'fashion-brand-theme' ); ?></span>
+			</button>
+			<button type="button" class="wishlist-page__view-btn" data-wishlist-view="list" aria-pressed="false" aria-label="<?php esc_attr_e( 'List view', 'fashion-brand-theme' ); ?>">
+				<?php echo fashion_brand_theme_get_icon( 'list', array( 'width' => 18, 'height' => 18 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<span><?php esc_html_e( 'List', 'fashion-brand-theme' ); ?></span>
+			</button>
+		</div>
+	</div>
+
 	<div class="wishlist-page__grid shop-main container container--wide" data-wishlist-grid>
 		<?php
 		$wishlist_query = new WP_Query(

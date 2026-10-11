@@ -246,11 +246,20 @@ function fashion_brand_theme_enqueue_assets() {
 		);
 	}
 
-	if ( is_page( 'wishlist' ) ) {
+	$load_wishlist_page = is_page( 'wishlist' )
+		|| ( function_exists( 'is_account_page' ) && is_account_page() && function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'wishlist' ) );
+
+	if ( $load_wishlist_page ) {
+		$wishlist_deps = array( 'fashion-brand-theme-main' );
+
+		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+			$wishlist_deps[] = 'fashion-brand-theme-account';
+		}
+
 		wp_enqueue_style(
 			'fashion-brand-theme-wishlist',
 			FASHION_BRAND_THEME_URI . '/assets/css/pages/wishlist.css',
-			array( 'fashion-brand-theme-main' ),
+			$wishlist_deps,
 			FASHION_BRAND_THEME_VERSION
 		);
 

@@ -14,15 +14,7 @@ do_action( 'woocommerce_before_lost_password_form' );
 
 <section class="auth auth--lost-password">
 	<div class="auth-frame">
-		<div class="auth-visual">
-			<div class="tag"><?php esc_html_e( 'WREN WOLD / Member space', 'fashion-brand-theme' ); ?></div>
-			<div class="abstract-shape" aria-hidden="true"></div>
-			<div class="visual-copy">
-				<small><?php esc_html_e( 'Made for the considered life', 'fashion-brand-theme' ); ?></small>
-				<h2><?php esc_html_e( 'Less, but', 'fashion-brand-theme' ); ?><br><em><?php esc_html_e( 'better.', 'fashion-brand-theme' ); ?></em></h2>
-			</div>
-			<div class="bottom-note"><?php esc_html_e( 'Personal account · Private access', 'fashion-brand-theme' ); ?></div>
-		</div>
+		<?php fashion_brand_theme_render_auth_visual(); ?>
 
 		<div class="auth-form">
 			<div class="panel active">
