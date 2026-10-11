@@ -82,7 +82,7 @@ body.woocommerce-account.logged-in .site-content {
 	padding-block: 0;
 }
 
-body.woocommerce-account.logged-in .entry-title {
+body.woocommerce-account .entry-title {
 	display: none;
 }
 
@@ -123,54 +123,13 @@ body.woocommerce-account .password-input input {
 body.woocommerce-account .ww-account {
 	max-width: 82.5rem;
 	margin: 0 auto;
-	padding: 0 5.5vw 6.25rem;
-}
-
-body.woocommerce-account .hero {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	align-items: end;
-	gap: 1.875rem;
-	padding: 3.875rem 0 3rem;
-	border-bottom: 1px solid var(--line);
-}
-
-body.woocommerce-account .hero-kicker {
-	font-family: var(--sans);
-	font-size: 0.625rem;
-	text-transform: uppercase;
-	letter-spacing: 0.2em;
-	color: var(--green);
-	margin-bottom: 0.9375rem;
-}
-
-body.woocommerce-account .hero h1 {
-	font: 400 clamp(2.5rem, 5vw, 3.875rem) / 0.9 var(--serif);
-	letter-spacing: -0.04em;
-	margin: 0;
-	color: var(--ink);
-}
-
-body.woocommerce-account .hero h1 em {
-	color: var(--green);
-	font-weight: 400;
-	font-style: normal;
-}
-
-body.woocommerce-account .hero-aside {
-	max-width: 16.25rem;
-	font-family: var(--sans);
-	font-size: 0.75rem;
-	line-height: 1.8;
-	color: var(--muted);
-	padding-bottom: 0.25rem;
+	padding: 2.125rem 5.5vw 6.25rem;
 }
 
 body.woocommerce-account .layout {
 	display: grid;
 	grid-template-columns: 15rem minmax(0, 1fr);
 	gap: 2.25rem;
-	padding-top: 2.125rem;
 }
 
 body.woocommerce-account .sidebar {
@@ -1133,22 +1092,214 @@ body.woocommerce-account .form-row--remember {
 }
 
 /* -------------------------------------------------------------------------
-   Notices + WC fallbacks (view order, pagination)
+   Notices + address form + view order
    ------------------------------------------------------------------------- */
 
 body.woocommerce-account .woocommerce-notices-wrapper {
 	margin: 0 0 1.25rem;
 }
 
+body.woocommerce-account .ww-notice,
 body.woocommerce-account .woocommerce-message,
 body.woocommerce-account .woocommerce-info,
 body.woocommerce-account .woocommerce-error {
-	margin: 0 0 1rem;
-	padding: 1rem 1.25rem;
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	margin: 0 0 1.125rem;
+	padding: 1.0625rem 1.25rem;
 	border: 1px solid var(--line);
+	border-left-width: 4px;
 	background: var(--white);
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
+	line-height: 1.6;
+	color: var(--ink);
 	list-style: none;
+}
+
+body.woocommerce-account .ww-notice--success,
+body.woocommerce-account .woocommerce-message {
+	border-left-color: var(--green);
+}
+
+body.woocommerce-account .ww-notice--error,
+body.woocommerce-account .woocommerce-error {
+	flex-direction: column;
+	gap: 0.5rem;
+	border-left-color: var(--red);
+	padding-left: 1.125rem;
+}
+
+body.woocommerce-account .ww-notice--info,
+body.woocommerce-account .woocommerce-info {
+	border-left-color: var(--muted);
+}
+
+body.woocommerce-account .ww-notice__icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	margin-top: 0.1rem;
+	color: var(--green);
+}
+
+body.woocommerce-account .ww-notice--error .ww-notice__icon {
+	color: var(--red);
+}
+
+body.woocommerce-account .ww-notice--info .ww-notice__icon {
+	color: var(--muted);
+}
+
+body.woocommerce-account .ww-notice__body {
+	flex: 1;
+	min-width: 0;
+}
+
+body.woocommerce-account .ww-notice__body a,
+body.woocommerce-account .woocommerce-message a,
+body.woocommerce-account .woocommerce-info a,
+body.woocommerce-account .woocommerce-error a {
+	color: var(--green);
+	text-decoration: none;
+}
+
+body.woocommerce-account .ww-notice__body a:hover,
+body.woocommerce-account .woocommerce-message a:hover,
+body.woocommerce-account .woocommerce-info a:hover,
+body.woocommerce-account .woocommerce-error a:hover {
+	color: var(--ink);
+}
+
+body.woocommerce-account .ww-notice__row {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0;
+}
+
+body.woocommerce-account .woocommerce-address-fields {
+	max-width: 29.375rem;
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row {
+	margin-bottom: 1.4375rem;
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row label {
+	display: block;
+	font-size: 0.625rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+	margin-bottom: 0.5625rem;
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row .required {
+	color: var(--red);
+	text-decoration: none;
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row input.input-text,
+body.woocommerce-account .woocommerce-address-fields .form-row textarea,
+body.woocommerce-account .woocommerce-address-fields .form-row select {
+	width: 100%;
+	border: 1px solid var(--line);
+	background: transparent;
+	padding: 0.875rem 0.8125rem;
+	outline: none;
+	font-size: 0.8125rem;
+	border-radius: 0;
+	box-shadow: none;
+	transition: 0.2s;
+	color: var(--ink);
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row input.input-text:focus,
+body.woocommerce-account .woocommerce-address-fields .form-row textarea:focus,
+body.woocommerce-account .woocommerce-address-fields .form-row select:focus {
+	border-color: var(--green);
+	background: var(--white);
+}
+
+body.woocommerce-account .woocommerce-address-fields .form-row .woocommerce-input-wrapper {
+	display: block;
+}
+
+body.woocommerce-account .view-order__meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-bottom: 0.5rem;
+}
+
+body.woocommerce-account .view-order__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1rem;
+	margin: 1rem 0 0;
+}
+
+body.woocommerce-account .view-order__actions .save {
+	text-decoration: none;
+	display: inline-block;
+}
+
+body.woocommerce-account .view-order-details-block .woocommerce-order-details__title {
+	font: 400 1.625rem var(--serif);
+	margin: 0 0 1.375rem;
+	color: var(--ink);
+}
+
+body.woocommerce-account .view-order-details-block .woocommerce-customer-details {
+	margin-top: 1.5rem;
+}
+
+body.woocommerce-account .view-order-details-block tr:has(.order-actions-button),
+body.woocommerce-account .view-order-details-block tr:has(.order-actions--heading) {
+	display: none;
+}
+
+body.woocommerce-account .view-order-details-block .woocommerce-button.button:not(.save) {
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--green);
+	font-size: 0.6875rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-decoration: none;
+	box-shadow: none;
+}
+
+body.woocommerce-account .woocommerce-OrderUpdates {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+body.woocommerce-account .woocommerce-OrderUpdate {
+	padding: 0.875rem 0;
+	border-top: 1px solid var(--line);
+	font-size: 0.8125rem;
+	color: var(--muted);
+}
+
+body.woocommerce-account .woocommerce-OrderUpdate:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+
+body.woocommerce-account .woocommerce-OrderUpdate-meta {
+	font-size: 0.625rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	margin: 0 0 0.35rem;
 }
 
 body.woocommerce-account .account-orders__pagination {
@@ -1161,7 +1312,7 @@ body.woocommerce-account .account-orders__pagination {
 body.woocommerce-account table.shop_table,
 body.woocommerce-account .woocommerce-table {
 	width: 100%;
-	margin: 1rem 0;
+	margin: 0 0 1rem;
 	border-collapse: collapse;
 	border: 1px solid var(--line);
 	background: var(--white);
@@ -1173,6 +1324,19 @@ body.woocommerce-account table.shop_table td {
 	border-bottom: 1px solid var(--line);
 	text-align: left;
 	font-size: 0.875rem;
+	vertical-align: top;
+}
+
+body.woocommerce-account table.shop_table tfoot th,
+body.woocommerce-account table.shop_table tfoot td {
+	border-bottom: 0;
+	font-size: 0.8125rem;
+}
+
+body.woocommerce-account table.shop_table tfoot tr:last-child th,
+body.woocommerce-account table.shop_table tfoot tr:last-child td {
+	font-weight: 600;
+	color: var(--ink);
 }
 
 /* -------------------------------------------------------------------------
@@ -1192,10 +1356,6 @@ body.woocommerce-account table.shop_table td {
 
 	body.woocommerce-account .quick-grid {
 		grid-template-columns: repeat(2, 1fr);
-	}
-
-	body.woocommerce-account .hero {
-		padding-top: 2.8125rem;
 	}
 }
 
@@ -1229,19 +1389,12 @@ body.woocommerce-account table.shop_table td {
 		padding: 2.375rem 1.6875rem;
 	}
 
-	body.woocommerce-account .hero {
-		grid-template-columns: 1fr;
-		padding: 2.75rem 0 1.875rem;
-		gap: 1.125rem;
-	}
-
-	body.woocommerce-account .hero-aside {
-		max-width: 23.125rem;
+	body.woocommerce-account .ww-account {
+		padding-top: 1.25rem;
 	}
 
 	body.woocommerce-account .layout {
 		grid-template-columns: 1fr;
-		padding-top: 1.25rem;
 	}
 
 	body.woocommerce-account .sidebar {
