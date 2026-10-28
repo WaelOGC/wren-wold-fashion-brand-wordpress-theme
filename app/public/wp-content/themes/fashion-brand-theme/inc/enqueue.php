@@ -270,6 +270,25 @@ function fashion_brand_theme_enqueue_assets() {
 		);
 	}
 
+	$load_blog_css = ! is_search()
+		&& (
+			is_home()
+			|| is_singular( 'post' )
+			|| is_category()
+			|| is_tag()
+			|| is_author()
+			|| is_date()
+		);
+
+	if ( $load_blog_css ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-blog',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/blog.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+	}
+
 	if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 		wp_enqueue_style(
 			'fashion-brand-theme-account',
