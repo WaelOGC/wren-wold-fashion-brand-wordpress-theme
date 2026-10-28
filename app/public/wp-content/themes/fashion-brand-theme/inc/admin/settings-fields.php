@@ -37,27 +37,27 @@ add_action( 'admin_init', 'fashion_brand_theme_register_settings' );
  */
 function fashion_brand_theme_register_settings_sections() {
 	$sections = array(
-		'fashion_brand_theme_general'   => array(
+		'fashion_brand_theme_general'  => array(
 			'title'       => __( 'General', 'fashion-brand-theme' ),
 			'description' => __( 'Optional announcement messaging and display label fallback.', 'fashion-brand-theme' ),
 		),
-		'fashion_brand_theme_header'    => array(
+		'fashion_brand_theme_header'   => array(
 			'title'       => __( 'Header', 'fashion-brand-theme' ),
 			'description' => __( 'Utility header controls. Navigation structure remains code-controlled.', 'fashion-brand-theme' ),
 		),
-		'fashion_brand_theme_footer'    => array(
+		'fashion_brand_theme_footer'   => array(
 			'title'       => __( 'Footer', 'fashion-brand-theme' ),
 			'description' => __( 'Footer visibility and content. Menus are managed under Appearance → Menus.', 'fashion-brand-theme' ),
 		),
-		'fashion_brand_theme_homepage'  => array(
+		'fashion_brand_theme_homepage' => array(
 			'title'       => __( 'Homepage', 'fashion-brand-theme' ),
 			'description' => __( 'Enable or disable homepage sections and edit limited hero/CTA copy. Section order and layout remain code-controlled.', 'fashion-brand-theme' ),
 		),
-		'fashion_brand_theme_shop'      => array(
+		'fashion_brand_theme_shop'     => array(
 			'title'       => __( 'Shop Presentation', 'fashion-brand-theme' ),
 			'description' => __( 'Presentation-only settings applied when WooCommerce is installed. Product, pricing, and checkout configuration remain in WooCommerce.', 'fashion-brand-theme' ),
 		),
-		'fashion_brand_theme_social'    => array(
+		'fashion_brand_theme_social'   => array(
 			'title'       => __( 'Social & Integrations', 'fashion-brand-theme' ),
 			'description' => __( 'External profile links for theme output. URLs are sanitized on save.', 'fashion-brand-theme' ),
 		),
@@ -76,12 +76,14 @@ function fashion_brand_theme_register_settings_sections() {
 }
 
 /**
- * Register individual settings fields.
+ * Canonical field definitions for Theme Settings (registration + dashboard UI).
  *
- * @return void
+ * Each item: key, label, section, type, description.
+ *
+ * @return array<int, array{0:string,1:string,2:string,3:string,4?:string}>
  */
-function fashion_brand_theme_register_settings_fields() {
-	$fields = array(
+function fashion_brand_theme_get_settings_fields_definition() {
+	return array(
 		// General.
 		array( 'display_label', __( 'Display Label Fallback', 'fashion-brand-theme' ), 'fashion_brand_theme_general', 'text', __( 'Used when no custom logo is set. Does not replace the WordPress site title.', 'fashion-brand-theme' ) ),
 		array( 'announcement_enabled', __( 'Enable Announcement Bar', 'fashion-brand-theme' ), 'fashion_brand_theme_general', 'checkbox', __( 'Optional bar above the site header.', 'fashion-brand-theme' ) ),
@@ -148,8 +150,54 @@ function fashion_brand_theme_register_settings_fields() {
 		array( 'social_linkedin', __( 'LinkedIn URL', 'fashion-brand-theme' ), 'fashion_brand_theme_social', 'url' ),
 		array( 'social_youtube', __( 'YouTube URL', 'fashion-brand-theme' ), 'fashion_brand_theme_social', 'url' ),
 	);
+}
 
-	foreach ( $fields as $field ) {
+/**
+ * Normalized field map keyed by setting key.
+ *
+ * @return array<string, array{key:string,label:string,section:string,type:string,description:string,tab:string}>
+ */
+function fashion_brand_theme_get_settings_fields_map() {
+	static $map = null;
+
+	if ( null !== $map ) {
+		return $map;
+	}
+
+	$map      = array();
+	$sections = fashion_brand_theme_get_settings_tab_sections();
+
+	foreach ( fashion_brand_theme_get_settings_fields_definition() as $field ) {
+		$section = $field[2];
+		$tab     = 'general';
+
+		foreach ( $sections as $tab_id => $section_ids ) {
+			if ( in_array( $section, $section_ids, true ) ) {
+				$tab = $tab_id;
+				break;
+			}
+		}
+
+		$map[ $field[0] ] = array(
+			'key'         => $field[0],
+			'label'       => $field[1],
+			'section'     => $section,
+			'type'        => $field[3],
+			'description' => $field[4] ?? '',
+			'tab'         => $tab,
+		);
+	}
+
+	return $map;
+}
+
+/**
+ * Register individual settings fields.
+ *
+ * @return void
+ */
+function fashion_brand_theme_register_settings_fields() {
+	foreach ( fashion_brand_theme_get_settings_fields_definition() as $field ) {
 		$callback = 'fashion_brand_theme_render_text_field';
 
 		if ( 'checkbox' === $field[3] ) {

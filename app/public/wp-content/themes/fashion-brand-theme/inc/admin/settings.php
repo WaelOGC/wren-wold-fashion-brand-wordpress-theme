@@ -18,11 +18,12 @@ define( 'FASHION_BRAND_THEME_SETTINGS_OPTION', 'fashion_brand_theme_settings' );
  */
 function fashion_brand_theme_get_settings_tabs() {
 	return array(
-		'general'        => __( 'General', 'fashion-brand-theme' ),
-		'header-footer'  => __( 'Header & Footer', 'fashion-brand-theme' ),
-		'homepage'       => __( 'Homepage', 'fashion-brand-theme' ),
-		'shop'           => __( 'Shop Presentation', 'fashion-brand-theme' ),
-		'social'         => __( 'Social & Integrations', 'fashion-brand-theme' ),
+		'general'  => __( 'General', 'fashion-brand-theme' ),
+		'header'   => __( 'Header', 'fashion-brand-theme' ),
+		'footer'   => __( 'Footer', 'fashion-brand-theme' ),
+		'homepage' => __( 'Homepage', 'fashion-brand-theme' ),
+		'shop'     => __( 'Shop Presentation', 'fashion-brand-theme' ),
+		'social'   => __( 'Social & Integrations', 'fashion-brand-theme' ),
 	);
 }
 
@@ -33,11 +34,12 @@ function fashion_brand_theme_get_settings_tabs() {
  */
 function fashion_brand_theme_get_settings_tab_sections() {
 	return array(
-		'general'       => array( 'fashion_brand_theme_general' ),
-		'header-footer' => array( 'fashion_brand_theme_header', 'fashion_brand_theme_footer' ),
-		'homepage'      => array( 'fashion_brand_theme_homepage' ),
-		'shop'          => array( 'fashion_brand_theme_shop' ),
-		'social'        => array( 'fashion_brand_theme_social' ),
+		'general'  => array( 'fashion_brand_theme_general' ),
+		'header'   => array( 'fashion_brand_theme_header' ),
+		'footer'   => array( 'fashion_brand_theme_footer' ),
+		'homepage' => array( 'fashion_brand_theme_homepage' ),
+		'shop'     => array( 'fashion_brand_theme_shop' ),
+		'social'   => array( 'fashion_brand_theme_social' ),
 	);
 }
 
