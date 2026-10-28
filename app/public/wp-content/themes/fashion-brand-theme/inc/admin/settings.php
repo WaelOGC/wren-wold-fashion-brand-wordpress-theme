@@ -89,6 +89,7 @@ function fashion_brand_theme_get_default_settings() {
 		'footer_copyright_enabled'   => true,
 		'footer_social_enabled'      => true,
 		'footer_menu_enabled'        => false,
+		'cookie_banner_enabled'      => true,
 		// Homepage visibility.
 		'homepage_hero_enabled'      => true,
 		'homepage_philosophy_enabled' => true,
@@ -197,6 +198,7 @@ function fashion_brand_theme_get_checkbox_setting_keys() {
 		'footer_copyright_enabled',
 		'footer_social_enabled',
 		'footer_menu_enabled',
+		'cookie_banner_enabled',
 		'homepage_hero_enabled',
 		'homepage_philosophy_enabled',
 		'homepage_categories_enabled',

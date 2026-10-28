@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		get_template_part( 'template-parts/cart/cart', 'drawer' );
 	}
 	?>
+	<?php get_template_part( 'template-parts/global/cookie', 'consent' ); ?>
 </div><!-- #page -->
 <?php wp_footer(); ?>
 </body>

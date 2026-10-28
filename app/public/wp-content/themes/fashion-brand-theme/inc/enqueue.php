@@ -32,6 +32,7 @@ function fashion_brand_theme_enqueue_assets() {
 		'components/product',
 		'components/cart',
 		'components/cart-drawer',
+		'components/cookie-consent',
 		'components/checkout',
 	);
 
@@ -84,6 +85,22 @@ function fashion_brand_theme_enqueue_assets() {
 			array(
 				'wcAjaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( '%%endpoint%%' ) : '',
 			)
+		);
+	}
+
+	if ( function_exists( 'fashion_brand_theme_should_render_cookie_consent' ) && fashion_brand_theme_should_render_cookie_consent() ) {
+		wp_enqueue_script(
+			'fashion-brand-theme-cookie-consent',
+			FASHION_BRAND_THEME_URI . '/assets/js/cookie-consent.js',
+			array(),
+			FASHION_BRAND_THEME_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'fashion-brand-theme-cookie-consent',
+			'fashionBrandThemeCookieConsent',
+			fashion_brand_theme_cookie_consent_script_data()
 		);
 	}
 

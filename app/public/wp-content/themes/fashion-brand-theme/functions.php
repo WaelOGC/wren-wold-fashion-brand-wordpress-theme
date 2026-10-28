@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'FASHION_BRAND_THEME_VERSION', '0.4.63' );
+define( 'FASHION_BRAND_THEME_VERSION', '0.4.64' );
 define( 'FASHION_BRAND_THEME_DIR', get_template_directory() );
 define( 'FASHION_BRAND_THEME_URI', get_template_directory_uri() );
 
@@ -74,6 +74,7 @@ require FASHION_BRAND_THEME_DIR . '/inc/accessibility.php';
 require FASHION_BRAND_THEME_DIR . '/inc/woocommerce.php';
 require FASHION_BRAND_THEME_DIR . '/inc/woocommerce-catalog.php';
 require FASHION_BRAND_THEME_DIR . '/inc/cart-drawer.php';
+require FASHION_BRAND_THEME_DIR . '/inc/cookie-consent.php';
 require FASHION_BRAND_THEME_DIR . '/inc/wishlist.php';
 require FASHION_BRAND_THEME_DIR . '/inc/live-search.php';
 require FASHION_BRAND_THEME_DIR . '/inc/account.php';

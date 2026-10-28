@@ -105,6 +105,7 @@ function fashion_brand_theme_register_settings_fields() {
 		array( 'footer_copyright_text', __( 'Footer Copyright Text', 'fashion-brand-theme' ), 'fashion_brand_theme_footer', 'text', __( 'Optional override. Leave empty to use the default copyright line.', 'fashion-brand-theme' ) ),
 		array( 'footer_social_enabled', __( 'Show Social Links', 'fashion-brand-theme' ), 'fashion_brand_theme_footer', 'checkbox' ),
 		array( 'footer_menu_enabled', __( 'Show Footer Menu', 'fashion-brand-theme' ), 'fashion_brand_theme_footer', 'checkbox', __( 'Assign a menu to the Footer Menu location under Appearance → Menus.', 'fashion-brand-theme' ) ),
+		array( 'cookie_banner_enabled', __( 'Enable Cookie Consent Banner', 'fashion-brand-theme' ), 'fashion_brand_theme_footer', 'checkbox', __( 'Shows the GDPR cookie bar until the visitor accepts, rejects, or saves preferences. Strictly necessary cookies are unaffected.', 'fashion-brand-theme' ) ),
 
 		// Homepage visibility.
 		array( 'homepage_hero_enabled', __( 'Show Hero', 'fashion-brand-theme' ), 'fashion_brand_theme_homepage', 'checkbox' ),
