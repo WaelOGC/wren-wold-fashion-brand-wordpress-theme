@@ -24,6 +24,7 @@ function fashion_brand_theme_get_settings_tabs() {
 		'homepage' => __( 'Homepage', 'fashion-brand-theme' ),
 		'shop'     => __( 'Shop Presentation', 'fashion-brand-theme' ),
 		'contact'  => __( 'Contact', 'fashion-brand-theme' ),
+		'company'  => __( 'Company', 'fashion-brand-theme' ),
 		'social'   => __( 'Social & Integrations', 'fashion-brand-theme' ),
 	);
 }
@@ -41,6 +42,7 @@ function fashion_brand_theme_get_settings_tab_sections() {
 		'homepage' => array( 'fashion_brand_theme_homepage' ),
 		'shop'     => array( 'fashion_brand_theme_shop' ),
 		'contact'  => array( 'fashion_brand_theme_contact' ),
+		'company'  => array( 'fashion_brand_theme_company' ),
 		'social'   => array( 'fashion_brand_theme_social' ),
 	);
 }
@@ -127,6 +129,16 @@ function fashion_brand_theme_get_default_settings() {
 		'whatsapp_enabled'           => false,
 		'whatsapp_number'            => '',
 		'whatsapp_message'           => __( 'Hi, I have a question about...', 'fashion-brand-theme' ),
+		// Company & Contact (data entered via Customizer; visibility via Theme Settings).
+		'company_details_visible'    => false,
+		'company_name'               => '',
+		'company_phone'              => '',
+		'company_email'              => '',
+		'company_street'             => '',
+		'company_postcode'           => '',
+		'company_city'               => '',
+		'company_kvk'                => '',
+		'company_vat'                => '',
 		// Social.
 		'social_enabled'             => true,
 		'social_open_new_tab'        => true,
@@ -218,6 +230,7 @@ function fashion_brand_theme_get_checkbox_setting_keys() {
 		'shop_show_category',
 		'shop_show_badges',
 		'whatsapp_enabled',
+		'company_details_visible',
 		'social_enabled',
 		'social_open_new_tab',
 	);
@@ -285,7 +298,17 @@ function fashion_brand_theme_sanitize_setting_value( $key, $value ) {
 		case 'homepage_cta_primary_label':
 		case 'homepage_cta_secondary_label':
 		case 'shop_footer_tagline':
+		case 'company_name':
+		case 'company_phone':
+		case 'company_street':
+		case 'company_postcode':
+		case 'company_city':
+		case 'company_kvk':
+		case 'company_vat':
 			return sanitize_text_field( wp_unslash( (string) $value ) );
+
+		case 'company_email':
+			return sanitize_email( wp_unslash( (string) $value ) );
 
 		case 'announcement_link_url':
 		case 'homepage_hero_cta_url':

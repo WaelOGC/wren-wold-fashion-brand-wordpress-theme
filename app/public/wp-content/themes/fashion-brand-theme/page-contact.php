@@ -50,6 +50,31 @@ $form_heading = __( 'Send a message', 'fashion-brand-theme' );
 					<a href="<?php echo esc_url( 'mailto:' . $contact_email ); ?>"><?php echo esc_html( $contact_email ); ?></a>
 				</p>
 				<p class="contact-aside-column__response"><?php echo esc_html( $response_note ); ?></p>
+				<?php
+				if ( function_exists( 'fashion_brand_theme_has_company_public_details' ) && fashion_brand_theme_has_company_public_details() ) :
+					$company_name    = fashion_brand_theme_get_company_field( 'company_name' );
+					$company_phone   = fashion_brand_theme_get_company_field( 'company_phone' );
+					$company_address = fashion_brand_theme_get_company_address_lines();
+					$company_tel     = '' !== $company_phone ? fashion_brand_theme_get_company_tel_href( $company_phone ) : '';
+					?>
+					<div class="contact-aside-column__company">
+						<?php if ( '' !== $company_name ) : ?>
+							<p class="contact-aside-column__company-name"><?php echo esc_html( $company_name ); ?></p>
+						<?php endif; ?>
+						<?php if ( ! empty( $company_address ) ) : ?>
+							<address class="contact-aside-column__company-address">
+								<?php foreach ( $company_address as $line ) : ?>
+									<span><?php echo esc_html( $line ); ?></span>
+								<?php endforeach; ?>
+							</address>
+						<?php endif; ?>
+						<?php if ( '' !== $company_phone && '' !== $company_tel ) : ?>
+							<p class="contact-aside-column__company-phone">
+								<a href="<?php echo esc_url( 'tel:' . $company_tel ); ?>"><?php echo esc_html( $company_phone ); ?></a>
+							</p>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
 				<?php fashion_brand_theme_render_social_icons(); ?>
 			</aside>
 

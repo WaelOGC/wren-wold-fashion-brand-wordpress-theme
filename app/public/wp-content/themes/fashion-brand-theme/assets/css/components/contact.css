@@ -205,6 +205,46 @@
 	outline-offset: var(--focus-outline-offset);
 }
 
+.contact-aside-column__company {
+	margin: 0 0 var(--space-5);
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--color-border);
+}
+
+.contact-aside-column__company-name {
+	margin: 0 0 var(--space-2);
+	font-family: var(--font-family-display);
+	font-size: 1.125rem;
+	font-weight: 500;
+	color: var(--color-text);
+}
+
+.contact-aside-column__company-address {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15em;
+	margin: 0 0 var(--space-2);
+	font-style: normal;
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	color: var(--color-text-muted);
+}
+
+.contact-aside-column__company-phone {
+	margin: 0;
+	font-size: 0.9375rem;
+}
+
+.contact-aside-column__company-phone a {
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.contact-aside-column__company-phone a:hover,
+.contact-aside-column__company-phone a:focus-visible {
+	text-decoration: underline;
+}
+
 .contact-aside-column__response {
 	margin: 0 0 32px;
 	font-family: var(--font-family-base);

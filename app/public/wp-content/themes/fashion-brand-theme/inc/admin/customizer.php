@@ -152,6 +152,124 @@ function fashion_brand_theme_customize_register_social_media( $wp_customize ) {
 add_action( 'customize_register', 'fashion_brand_theme_customize_register_social_media', 20 );
 
 /**
+ * Company & Contact Customizer setting keys (stored in Theme Settings option).
+ *
+ * @return string[]
+ */
+function fashion_brand_theme_get_company_customizer_setting_keys() {
+	return array(
+		'company_name',
+		'company_phone',
+		'company_email',
+		'company_street',
+		'company_postcode',
+		'company_city',
+		'company_kvk',
+		'company_vat',
+	);
+}
+
+/**
+ * Register Customizer Company & Contact fields.
+ *
+ * @param WP_Customize_Manager $wp_customize Customizer manager.
+ * @return void
+ */
+function fashion_brand_theme_customize_register_company_contact( $wp_customize ) {
+	$wp_customize->add_section(
+		'fashion_brand_theme_company_contact',
+		array(
+			'title'       => __( 'Company & Contact', 'fashion-brand-theme' ),
+			'description' => __( 'Business details for the Contact page, footer, and Schema.org. Visibility is controlled under Fashion Brand → Theme Settings → Company. Leave any field blank to omit it.', 'fashion-brand-theme' ),
+			'priority'    => 36,
+		)
+	);
+
+	$controls = array(
+		'company_name'     => array(
+			'label' => __( 'Company Name', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+		'company_phone'    => array(
+			'label' => __( 'Phone', 'fashion-brand-theme' ),
+			'type'  => 'tel',
+		),
+		'company_email'    => array(
+			'label' => __( 'Email', 'fashion-brand-theme' ),
+			'type'  => 'email',
+		),
+		'company_street'   => array(
+			'label' => __( 'Street + Number', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+		'company_postcode' => array(
+			'label' => __( 'Postcode', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+		'company_city'     => array(
+			'label' => __( 'City', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+		'company_kvk'      => array(
+			'label' => __( 'KVK Number', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+		'company_vat'      => array(
+			'label' => __( 'VAT Number', 'fashion-brand-theme' ),
+			'type'  => 'text',
+		),
+	);
+
+	$defaults = fashion_brand_theme_get_default_settings();
+
+	foreach ( $controls as $key => $control ) {
+		$setting_id = fashion_brand_theme_get_customizer_setting_id( $key );
+
+		$wp_customize->add_setting(
+			$setting_id,
+			array(
+				'capability'        => 'edit_theme_options',
+				'default'           => $defaults[ $key ] ?? '',
+				'transport'         => 'refresh',
+				'sanitize_callback' => static function ( $value ) use ( $key ) {
+					return fashion_brand_theme_persist_setting( $key, $value );
+				},
+			)
+		);
+
+		add_filter(
+			'customize_value_' . $setting_id,
+			static function () use ( $key ) {
+				return fashion_brand_theme_get_setting( $key );
+			}
+		);
+
+		$wp_customize->add_control(
+			$setting_id,
+			array(
+				'label'   => $control['label'],
+				'section' => 'fashion_brand_theme_company_contact',
+				'type'    => $control['type'],
+			)
+		);
+	}
+}
+add_action( 'customize_register', 'fashion_brand_theme_customize_register_company_contact', 25 );
+
+/**
+ * Clear Customizer theme_mods for company fields (values live in Theme Settings option).
+ *
+ * @param WP_Customize_Manager $wp_customize Customizer manager.
+ * @return void
+ */
+function fashion_brand_theme_customize_save_company_contact_settings( $wp_customize ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+	foreach ( fashion_brand_theme_get_company_customizer_setting_keys() as $key ) {
+		remove_theme_mod( fashion_brand_theme_get_customizer_setting_id( $key ) );
+	}
+}
+add_action( 'customize_save_after', 'fashion_brand_theme_customize_save_company_contact_settings' );
+
+/**
  * Persist unchecked social platform enabled toggles.
  *
  * @param WP_Customize_Manager $wp_customize Customizer manager.

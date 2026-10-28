@@ -49,6 +49,31 @@ $terms        = $terms_page ? get_permalink( $terms_page ) : '#';
 			<?php if ( is_string( $tagline ) && '' !== trim( $tagline ) ) : ?>
 				<p class="site-footer__tagline"><?php echo esc_html( $tagline ); ?></p>
 			<?php endif; ?>
+			<?php
+			if ( function_exists( 'fashion_brand_theme_has_company_public_details' ) && fashion_brand_theme_has_company_public_details() ) :
+				$footer_company_name    = fashion_brand_theme_get_company_field( 'company_name' );
+				$footer_company_phone   = fashion_brand_theme_get_company_field( 'company_phone' );
+				$footer_company_address = fashion_brand_theme_get_company_address_lines();
+				$footer_company_tel     = '' !== $footer_company_phone ? fashion_brand_theme_get_company_tel_href( $footer_company_phone ) : '';
+				?>
+				<div class="site-footer__company">
+					<?php if ( '' !== $footer_company_name ) : ?>
+						<p class="site-footer__company-name"><?php echo esc_html( $footer_company_name ); ?></p>
+					<?php endif; ?>
+					<?php if ( ! empty( $footer_company_address ) ) : ?>
+						<address class="site-footer__company-address">
+							<?php foreach ( $footer_company_address as $line ) : ?>
+								<span><?php echo esc_html( $line ); ?></span>
+							<?php endforeach; ?>
+						</address>
+					<?php endif; ?>
+					<?php if ( '' !== $footer_company_phone && '' !== $footer_company_tel ) : ?>
+						<p class="site-footer__company-phone">
+							<a href="<?php echo esc_url( 'tel:' . $footer_company_tel ); ?>"><?php echo esc_html( $footer_company_phone ); ?></a>
+						</p>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 			<?php if ( fashion_brand_theme_is_setting_enabled( 'footer_social_enabled' ) && ! empty( fashion_brand_theme_get_social_links() ) ) : ?>
 				<nav class="site-footer__social" aria-label="<?php esc_attr_e( 'Social links', 'fashion-brand-theme' ); ?>">
 					<?php
@@ -106,6 +131,28 @@ $terms        = $terms_page ? get_permalink( $terms_page ) : '#';
 				&copy; <?php echo esc_html( gmdate( 'Y' ) ); ?> <?php echo esc_html( fashion_brand_theme_get_display_label() ); ?>
 			<?php endif; ?>
 		</p>
+		<?php
+		if ( function_exists( 'fashion_brand_theme_has_company_legal_ids' ) && fashion_brand_theme_has_company_legal_ids() ) :
+			$kvk = fashion_brand_theme_get_company_field( 'company_kvk' );
+			$vat = fashion_brand_theme_get_company_field( 'company_vat' );
+			$legal_bits = array();
+			if ( '' !== $kvk ) {
+				$legal_bits[] = sprintf(
+					/* translators: %s: Chamber of Commerce (KVK) number */
+					__( 'KVK: %s', 'fashion-brand-theme' ),
+					$kvk
+				);
+			}
+			if ( '' !== $vat ) {
+				$legal_bits[] = sprintf(
+					/* translators: %s: VAT identification number */
+					__( 'VAT: %s', 'fashion-brand-theme' ),
+					$vat
+				);
+			}
+			?>
+			<p class="site-footer__company-legal"><?php echo esc_html( implode( ' · ', $legal_bits ) ); ?></p>
+		<?php endif; ?>
 		<p class="site-footer__legal">
 			<a href="<?php echo esc_url( $privacy ?: '#' ); ?>"><?php esc_html_e( 'Privacy Policy', 'fashion-brand-theme' ); ?></a>
 			<a href="<?php echo esc_url( $terms ); ?>"><?php esc_html_e( 'Terms', 'fashion-brand-theme' ); ?></a>

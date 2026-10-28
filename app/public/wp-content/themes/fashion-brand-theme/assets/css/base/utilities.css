@@ -247,6 +247,47 @@
 	max-width: 22ch;
 }
 
+.site-footer__company {
+	margin: 0 0 18px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: rgba(185, 203, 175, 0.85);
+}
+
+.site-footer__company-name {
+	margin: 0 0 6px;
+	font-weight: 600;
+	color: var(--color-accent-light);
+}
+
+.site-footer__company-address {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15em;
+	margin: 0 0 6px;
+	font-style: normal;
+}
+
+.site-footer__company-phone {
+	margin: 0;
+}
+
+.site-footer__company-phone a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.site-footer--dark .site-footer__company-phone a:hover,
+.site-footer--dark .site-footer__company-phone a:focus-visible {
+	color: #fff;
+}
+
+.site-footer__company-legal {
+	margin: 0;
+	color: rgba(185, 203, 175, 0.7);
+	font-size: 12px;
+}
+
 .site-footer--dark .site-footer__social {
 	display: flex;
 	gap: 16px;
