@@ -27,7 +27,7 @@ $resolve_page = static function ( $slug ) {
 $info_links = array(
 	array( 'label' => __( 'About', 'fashion-brand-theme' ), 'url' => $resolve_page( 'about' ) ),
 	array( 'label' => __( 'Journal', 'fashion-brand-theme' ), 'url' => $resolve_page( 'journal' ) ),
-	array( 'label' => __( 'Shipping & Returns', 'fashion-brand-theme' ), 'url' => $resolve_page( 'shipping-returns' ) ),
+	array( 'label' => __( 'Shipping & Returns', 'fashion-brand-theme' ), 'url' => $resolve_page( 'refund_returns' ) ),
 	array( 'label' => __( 'FAQ', 'fashion-brand-theme' ), 'url' => $resolve_page( 'faq' ) ),
 	array( 'label' => __( 'Contact', 'fashion-brand-theme' ), 'url' => $resolve_page( 'contact' ) ),
 );

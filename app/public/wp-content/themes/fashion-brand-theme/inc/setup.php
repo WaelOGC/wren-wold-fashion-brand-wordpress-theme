@@ -541,6 +541,92 @@ function fashion_brand_theme_ensure_about_page() {
 add_action( 'init', 'fashion_brand_theme_ensure_about_page' );
 
 /**
+ * Ensure the FAQ page exists for nav and page-faq.php.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_faq_page() {
+	if ( get_page_by_path( 'faq' ) ) {
+		return;
+	}
+
+	wp_insert_post(
+		array(
+			'post_title'   => __( 'FAQ', 'fashion-brand-theme' ),
+			'post_name'    => 'faq',
+			'post_status'  => 'publish',
+			'post_type'    => 'page',
+			'post_content' => '',
+		)
+	);
+}
+add_action( 'init', 'fashion_brand_theme_ensure_faq_page' );
+
+/**
+ * Ensure the Terms page exists and uses the Legal Page template.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_terms_page() {
+	$page = get_page_by_path( 'terms' );
+
+	if ( ! $page ) {
+		$page_id = wp_insert_post(
+			array(
+				'post_title'   => __( 'Terms', 'fashion-brand-theme' ),
+				'post_name'    => 'terms',
+				'post_status'  => 'publish',
+				'post_type'    => 'page',
+				'post_content' => '',
+			)
+		);
+
+		if ( $page_id && ! is_wp_error( $page_id ) ) {
+			update_post_meta( $page_id, '_wp_page_template', 'page-legal.php' );
+		}
+
+		return;
+	}
+
+	$current = get_post_meta( $page->ID, '_wp_page_template', true );
+	if ( 'page-legal.php' !== $current ) {
+		update_post_meta( $page->ID, '_wp_page_template', 'page-legal.php' );
+	}
+}
+add_action( 'init', 'fashion_brand_theme_ensure_terms_page' );
+
+/**
+ * Assign the Legal Page template to Privacy Policy and Shipping & Returns.
+ *
+ * @return void
+ */
+function fashion_brand_theme_ensure_legal_page_templates() {
+	$page_ids = array();
+
+	$privacy_id = (int) get_option( 'wp_page_for_privacy_policy' );
+	if ( $privacy_id > 0 ) {
+		$page_ids[] = $privacy_id;
+	}
+
+	foreach ( array( 'privacy-policy', 'refund_returns' ) as $slug ) {
+		$page = get_page_by_path( $slug );
+		if ( $page ) {
+			$page_ids[] = (int) $page->ID;
+		}
+	}
+
+	$page_ids = array_unique( array_filter( $page_ids ) );
+
+	foreach ( $page_ids as $page_id ) {
+		$current = get_post_meta( $page_id, '_wp_page_template', true );
+		if ( 'page-legal.php' !== $current ) {
+			update_post_meta( $page_id, '_wp_page_template', 'page-legal.php' );
+		}
+	}
+}
+add_action( 'init', 'fashion_brand_theme_ensure_legal_page_templates', 21 );
+
+/**
  * Ensure the Wishlist page exists for nav and page-wishlist.php.
  *
  * @return void

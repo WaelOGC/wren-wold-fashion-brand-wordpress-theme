@@ -1,0 +1,215 @@
+/**
+ * Legal pages — Privacy, Terms, Shipping & Returns.
+ * Long-form, single-column reading layout (no photo hero).
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+.legal-page {
+	background: var(--color-bg);
+}
+
+/* -------------------------------------------------------------------------
+   Header band — brand surface, no photography
+   ------------------------------------------------------------------------- */
+
+.legal-hero-banner {
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	padding: 4.5rem 48px 3.5rem;
+	background:
+		radial-gradient(ellipse 70% 80% at 10% 0%, color-mix(in srgb, var(--color-accent-muted) 55%, transparent), transparent 60%),
+		linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%);
+	border-bottom: 1px solid var(--color-border);
+	text-align: center;
+}
+
+.legal-hero-banner__inner {
+	max-width: 44rem;
+	margin: 0 auto;
+}
+
+.legal-hero-banner__eyebrow {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	margin: 0 0 12px;
+	font-family: var(--font-family-base);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--color-accent);
+}
+
+.legal-hero-banner__eyebrow::before {
+	content: "";
+	display: block;
+	width: 26px;
+	height: 1px;
+	background: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.legal-hero-banner__heading {
+	margin: 0;
+	font-family: var(--font-family-display);
+	font-size: clamp(1.75rem, 3.2vw, 2.625rem);
+	font-weight: 500;
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+	color: var(--color-text);
+}
+
+.legal-hero-banner__updated {
+	margin: 1rem 0 0;
+	font-family: var(--font-family-base);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+	letter-spacing: 0.02em;
+	color: var(--color-text-muted, var(--color-muted));
+}
+
+/* -------------------------------------------------------------------------
+   Content — ~65–75ch measure for long-form reading
+   ------------------------------------------------------------------------- */
+
+.legal-page__article {
+	padding: 3.5rem 0 5.5rem;
+}
+
+.legal-page__content {
+	max-width: 72ch;
+	margin: 0 auto;
+	padding: 0 48px;
+	font-family: var(--font-family-base);
+	font-size: 1.0625rem;
+	line-height: 1.7;
+	color: var(--color-text);
+}
+
+.legal-page__content > *:first-child {
+	margin-top: 0;
+}
+
+.legal-page__content > *:last-child {
+	margin-bottom: 0;
+}
+
+.legal-page__content h2,
+.legal-page__content h3,
+.legal-page__content h4 {
+	font-family: var(--font-family-display);
+	font-weight: 400;
+	line-height: 1.25;
+	color: var(--color-ink);
+}
+
+.legal-page__content h2 {
+	margin: 2.75rem 0 0.875rem;
+	font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+}
+
+.legal-page__content h3 {
+	margin: 2rem 0 0.625rem;
+	font-size: clamp(1.125rem, 1.8vw, 1.375rem);
+}
+
+.legal-page__content h4 {
+	margin: 1.5rem 0 0.5rem;
+	font-family: var(--font-family-base);
+	font-size: 1.0625rem;
+	font-weight: 600;
+}
+
+.legal-page__content p {
+	margin: 0 0 1.125rem;
+}
+
+.legal-page__content ul,
+.legal-page__content ol {
+	margin: 0 0 1.125rem;
+	padding-left: 1.35rem;
+}
+
+.legal-page__content li {
+	margin-bottom: 0.4rem;
+}
+
+.legal-page__content li > ul,
+.legal-page__content li > ol {
+	margin-top: 0.4rem;
+	margin-bottom: 0;
+}
+
+.legal-page__content strong,
+.legal-page__content b {
+	font-weight: 600;
+	color: var(--color-ink);
+}
+
+.legal-page__content a {
+	color: var(--color-accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.legal-page__content a:hover,
+.legal-page__content a:focus-visible {
+	color: var(--color-accent-hover, var(--color-ink));
+}
+
+.legal-page__content blockquote {
+	margin: 1.5rem 0;
+	padding: 0.25rem 0 0.25rem 1.25rem;
+	border-left: 2px solid var(--color-accent);
+	color: var(--color-text-muted, var(--color-muted));
+	font-style: italic;
+}
+
+.legal-page__content hr {
+	margin: 2.5rem 0;
+	border: 0;
+	border-top: 1px solid var(--color-border);
+}
+
+.legal-page__content table {
+	width: 100%;
+	margin: 0 0 1.5rem;
+	border-collapse: collapse;
+	font-size: 0.9375rem;
+}
+
+.legal-page__content th,
+.legal-page__content td {
+	padding: 0.625rem 0.75rem;
+	border: 1px solid var(--color-border);
+	text-align: left;
+	vertical-align: top;
+}
+
+.legal-page__content th {
+	font-weight: 600;
+	background: var(--color-surface);
+}
+
+@media (max-width: 720px) {
+	.legal-hero-banner {
+		padding: 3.25rem 24px 2.5rem;
+	}
+
+	.legal-page__article {
+		padding: 2.5rem 0 4rem;
+	}
+
+	.legal-page__content {
+		padding: 0 24px;
+		font-size: 1rem;
+		line-height: 1.65;
+	}
+
+	.legal-page__content h2 {
+		margin-top: 2.25rem;
+	}
+}

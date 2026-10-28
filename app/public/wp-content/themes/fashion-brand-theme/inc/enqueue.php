@@ -200,6 +200,24 @@ function fashion_brand_theme_enqueue_assets() {
 		);
 	}
 
+	if ( is_page( 'faq' ) ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-faq',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/faq.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+	}
+
+	if ( is_page_template( 'page-legal.php' ) ) {
+		wp_enqueue_style(
+			'fashion-brand-theme-legal',
+			FASHION_BRAND_THEME_URI . '/assets/css/pages/legal.css',
+			array( 'fashion-brand-theme-main' ),
+			FASHION_BRAND_THEME_VERSION
+		);
+	}
+
 	if ( is_404() ) {
 		wp_enqueue_style(
 			'fashion-brand-theme-404',
