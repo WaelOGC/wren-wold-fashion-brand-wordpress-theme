@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	}
 	?>
 	<?php get_template_part( 'template-parts/global/cookie', 'consent' ); ?>
+	<?php get_template_part( 'template-parts/global/whatsapp', 'button' ); ?>
 </div><!-- #page -->
 <?php wp_footer(); ?>
 </body>

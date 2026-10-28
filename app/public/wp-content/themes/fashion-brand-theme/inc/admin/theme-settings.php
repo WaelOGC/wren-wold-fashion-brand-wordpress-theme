@@ -262,6 +262,20 @@ function fashion_brand_theme_get_settings_card_groups() {
 				'fields'      => array( 'shop_show_price', 'shop_show_excerpt', 'shop_show_category', 'shop_show_badges' ),
 			),
 		),
+		'contact'  => array(
+			array(
+				'id'          => 'whatsapp',
+				'title'       => __( 'WhatsApp button', 'fashion-brand-theme' ),
+				'description' => __( 'Floating contact link to WhatsApp. Requires both the toggle and a phone number.', 'fashion-brand-theme' ),
+				'icon'        => 'whatsapp',
+				'master'      => 'whatsapp_enabled',
+				'fields'      => array(
+					'whatsapp_enabled',
+					'whatsapp_number',
+					'whatsapp_message',
+				),
+			),
+		),
 		'social'   => array(
 			array(
 				'id'          => 'social-master',
@@ -297,6 +311,7 @@ function fashion_brand_theme_get_settings_tab_descriptions() {
 		'footer'   => __( 'Footer visibility and content. Menus are managed under Appearance → Menus.', 'fashion-brand-theme' ),
 		'homepage' => __( 'Enable or disable homepage sections and edit limited hero/CTA copy.', 'fashion-brand-theme' ),
 		'shop'     => __( 'Presentation-only settings applied when WooCommerce is installed.', 'fashion-brand-theme' ),
+		'contact'  => __( 'Simple floating WhatsApp contact link. No AI — just a pre-filled chat to your number.', 'fashion-brand-theme' ),
 		'social'   => __( 'External profile links for theme output. URLs are sanitized on save.', 'fashion-brand-theme' ),
 	);
 }
@@ -315,6 +330,8 @@ function fashion_brand_theme_settings_icon_svg( $name ) {
 		'footer'    => '<path d="M4 6h16v12H4z"/><path d="M4 14h16"/>',
 		'homepage'  => '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
 		'shop'      => '<path d="M6 7h12l1 12H5z"/><path d="M9 7a3 3 0 0 1 6 0"/>',
+		'contact'   => '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+		'whatsapp'  => '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
 		'social'    => '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
 		'brand'     => '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
 		'megaphone' => '<path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1zM15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/>',
@@ -422,6 +439,7 @@ function fashion_brand_theme_render_settings_page() {
 		'footer'   => 'footer',
 		'homepage' => 'homepage',
 		'shop'     => 'shop',
+		'contact'  => 'contact',
 		'social'   => 'social',
 	);
 

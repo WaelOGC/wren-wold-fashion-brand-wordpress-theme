@@ -1,0 +1,67 @@
+/**
+ * Floating WhatsApp contact button (theme-owned, bottom-right).
+ *
+ * Stack note: a future AI chat float should use bottom-left, or stack above this
+ * button via --fbt-whatsapp-float-size + --fbt-float-stack-gap (right rail).
+ *
+ * @package Fashion_Brand_Theme
+ */
+
+:root {
+	--fbt-whatsapp-float-size: 3.5rem;
+	--fbt-float-stack-gap: var(--space-3);
+	--fbt-float-rail-inset: var(--space-5);
+}
+
+.whatsapp-float {
+	--whatsapp-float-banner-clearance: 0px;
+	--whatsapp-float-nav-clearance: 0px;
+
+	position: fixed;
+	right: max(var(--fbt-float-rail-inset), env(safe-area-inset-right, 0px));
+	bottom: calc(
+		var(--fbt-float-rail-inset) + env(safe-area-inset-bottom, 0px) + var(--whatsapp-float-nav-clearance) +
+			var(--whatsapp-float-banner-clearance)
+	);
+	z-index: 9975;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--fbt-whatsapp-float-size);
+	height: var(--fbt-whatsapp-float-size);
+	border-radius: var(--radius-full);
+	background-color: var(--color-accent);
+	color: #fff;
+	box-shadow: var(--shadow-lg);
+	text-decoration: none;
+	transition:
+		background-color var(--transition-fast),
+		transform var(--transition-fast),
+		bottom var(--transition-base),
+		box-shadow var(--transition-fast);
+}
+
+.whatsapp-float:hover {
+	background-color: var(--color-accent-hover);
+	color: #fff;
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgb(26 25 24 / 0.12);
+}
+
+.whatsapp-float:focus-visible {
+	outline: var(--focus-outline-width) solid var(--color-focus);
+	outline-offset: var(--focus-outline-offset);
+}
+
+.whatsapp-float__icon {
+	display: block;
+	width: 1.5rem;
+	height: 1.5rem;
+	flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+	body.has-mobile-bottom-nav .whatsapp-float {
+		--whatsapp-float-nav-clearance: 60px;
+	}
+}

@@ -57,6 +57,10 @@ function fashion_brand_theme_register_settings_sections() {
 			'title'       => __( 'Shop Presentation', 'fashion-brand-theme' ),
 			'description' => __( 'Presentation-only settings applied when WooCommerce is installed. Product, pricing, and checkout configuration remain in WooCommerce.', 'fashion-brand-theme' ),
 		),
+		'fashion_brand_theme_contact'  => array(
+			'title'       => __( 'Contact', 'fashion-brand-theme' ),
+			'description' => __( 'Simple floating WhatsApp contact link. No AI — just a pre-filled chat to your number.', 'fashion-brand-theme' ),
+		),
 		'fashion_brand_theme_social'   => array(
 			'title'       => __( 'Social & Integrations', 'fashion-brand-theme' ),
 			'description' => __( 'External profile links for theme output. URLs are sanitized on save.', 'fashion-brand-theme' ),
@@ -139,6 +143,11 @@ function fashion_brand_theme_get_settings_fields_definition() {
 		array( 'shop_show_excerpt', __( 'Show Product Excerpt', 'fashion-brand-theme' ), 'fashion_brand_theme_shop', 'checkbox' ),
 		array( 'shop_show_category', __( 'Show Product Category', 'fashion-brand-theme' ), 'fashion_brand_theme_shop', 'checkbox' ),
 		array( 'shop_show_badges', __( 'Show Product Badges', 'fashion-brand-theme' ), 'fashion_brand_theme_shop', 'checkbox' ),
+
+		// Contact / WhatsApp.
+		array( 'whatsapp_enabled', __( 'Enable WhatsApp Button', 'fashion-brand-theme' ), 'fashion_brand_theme_contact', 'checkbox', __( 'Shows a floating WhatsApp contact button when a number is also saved.', 'fashion-brand-theme' ) ),
+		array( 'whatsapp_number', __( 'WhatsApp Number', 'fashion-brand-theme' ), 'fashion_brand_theme_contact', 'text', __( 'Digits only, international format without a leading plus (e.g. 31649011582). Non-digits are stripped on save.', 'fashion-brand-theme' ) ),
+		array( 'whatsapp_message', __( 'Pre-filled Message', 'fashion-brand-theme' ), 'fashion_brand_theme_contact', 'textarea', __( 'Opens in the visitor’s WhatsApp chat as the starting message.', 'fashion-brand-theme' ) ),
 
 		// Social.
 		array( 'social_enabled', __( 'Enable Social Links', 'fashion-brand-theme' ), 'fashion_brand_theme_social', 'checkbox' ),

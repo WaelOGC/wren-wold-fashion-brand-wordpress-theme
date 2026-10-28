@@ -23,6 +23,7 @@ function fashion_brand_theme_get_settings_tabs() {
 		'footer'   => __( 'Footer', 'fashion-brand-theme' ),
 		'homepage' => __( 'Homepage', 'fashion-brand-theme' ),
 		'shop'     => __( 'Shop Presentation', 'fashion-brand-theme' ),
+		'contact'  => __( 'Contact', 'fashion-brand-theme' ),
 		'social'   => __( 'Social & Integrations', 'fashion-brand-theme' ),
 	);
 }
@@ -39,6 +40,7 @@ function fashion_brand_theme_get_settings_tab_sections() {
 		'footer'   => array( 'fashion_brand_theme_footer' ),
 		'homepage' => array( 'fashion_brand_theme_homepage' ),
 		'shop'     => array( 'fashion_brand_theme_shop' ),
+		'contact'  => array( 'fashion_brand_theme_contact' ),
 		'social'   => array( 'fashion_brand_theme_social' ),
 	);
 }
@@ -121,6 +123,10 @@ function fashion_brand_theme_get_default_settings() {
 		'shop_shipping_info'         => '',
 		'shop_returns_info'          => '',
 		'shop_footer_tagline'        => 'Clothing with intention.',
+		// Contact / WhatsApp.
+		'whatsapp_enabled'           => false,
+		'whatsapp_number'            => '',
+		'whatsapp_message'           => __( 'Hi, I have a question about...', 'fashion-brand-theme' ),
 		// Social.
 		'social_enabled'             => true,
 		'social_open_new_tab'        => true,
@@ -211,6 +217,7 @@ function fashion_brand_theme_get_checkbox_setting_keys() {
 		'shop_show_excerpt',
 		'shop_show_category',
 		'shop_show_badges',
+		'whatsapp_enabled',
 		'social_enabled',
 		'social_open_new_tab',
 	);
@@ -262,7 +269,11 @@ function fashion_brand_theme_sanitize_setting_value( $key, $value ) {
 		case 'homepage_cta_text':
 		case 'shop_shipping_info':
 		case 'shop_returns_info':
+		case 'whatsapp_message':
 			return sanitize_textarea_field( wp_unslash( (string) $value ) );
+
+		case 'whatsapp_number':
+			return preg_replace( '/\D+/', '', (string) wp_unslash( $value ) );
 
 		case 'display_label':
 		case 'announcement_link_label':
