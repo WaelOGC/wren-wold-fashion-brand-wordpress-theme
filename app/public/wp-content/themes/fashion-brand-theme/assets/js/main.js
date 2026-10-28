@@ -339,29 +339,57 @@
 		}
 	} );
 
-	document.addEventListener( 'change', function ( event ) {
-		const target = event.target;
+	const cartQtyUpdateTimers = {};
+	const cartQtyUpdatePending = {};
+	const cartQtyDesired = {};
 
-		if ( ! ( target instanceof Element ) || ! target.matches( '.cart-drawer__qty-input, .cart-drawer .qty' ) ) {
+	function syncCartQtyStepper( stepper ) {
+		if ( ! stepper ) {
 			return;
 		}
 
-		const wrap = target.closest( '[data-cart-item-key]' );
-		const cartItemKey = wrap ? wrap.getAttribute( 'data-cart-item-key' ) : '';
-		const quantity = target.value;
+		const input = stepper.querySelector( '.cart-drawer__qty-input, .qty' );
+		const decrease = stepper.querySelector( '.cart-drawer__qty-decrease' );
+		const increase = stepper.querySelector( '.cart-drawer__qty-increase' );
+
+		if ( ! input ) {
+			return;
+		}
+
+		const value = parseFloat( input.value ) || 0;
+		const min = input.min !== '' && input.min !== null ? parseFloat( input.min ) : 1;
+		const maxRaw = input.max !== '' && input.max !== null ? parseFloat( input.max ) : NaN;
+		const hasMax = ! Number.isNaN( maxRaw ) && maxRaw > 0;
+
+		if ( decrease ) {
+			decrease.disabled = value <= min;
+		}
+
+		if ( increase ) {
+			increase.disabled = hasMax && value >= maxRaw;
+		}
+	}
+
+	function sendCartItemQuantityUpdate( cartItemKey ) {
 		const ajaxUrl = getCartDrawerAjaxUrl( 'fashion_brand_update_cart_item' );
+		const quantity = cartQtyDesired[ cartItemKey ];
 
-		if ( ! cartItemKey || ! ajaxUrl || ! window.jQuery ) {
+		if ( ! cartItemKey || quantity === undefined || ! ajaxUrl || ! window.jQuery ) {
 			return;
 		}
 
-		window.jQuery.post(
-			ajaxUrl,
-			{
+		if ( cartQtyUpdatePending[ cartItemKey ] ) {
+			return;
+		}
+
+		cartQtyUpdatePending[ cartItemKey ] = true;
+
+		window.jQuery
+			.post( ajaxUrl, {
 				cart_item_key: cartItemKey,
 				quantity: quantity,
-			},
-			function ( response ) {
+			} )
+			.done( function ( response ) {
 				if ( ! response || ! response.fragments ) {
 					return;
 				}
@@ -371,8 +399,95 @@
 					response.fragments,
 					response.cart_hash,
 				] );
-			}
-		);
+			} )
+			.always( function () {
+				cartQtyUpdatePending[ cartItemKey ] = false;
+
+				// If the user stepped again while the request was in flight, send the latest.
+				if ( String( cartQtyDesired[ cartItemKey ] ) !== String( quantity ) ) {
+					scheduleCartItemQuantityUpdate( cartItemKey, cartQtyDesired[ cartItemKey ] );
+				}
+			} );
+	}
+
+	function scheduleCartItemQuantityUpdate( cartItemKey, quantity ) {
+		if ( ! cartItemKey ) {
+			return;
+		}
+
+		if ( quantity !== undefined ) {
+			cartQtyDesired[ cartItemKey ] = quantity;
+		}
+
+		window.clearTimeout( cartQtyUpdateTimers[ cartItemKey ] );
+		cartQtyUpdateTimers[ cartItemKey ] = window.setTimeout( function () {
+			sendCartItemQuantityUpdate( cartItemKey );
+		}, 280 );
+	}
+
+	document.addEventListener( 'change', function ( event ) {
+		const target = event.target;
+
+		if ( ! ( target instanceof Element ) || ! target.matches( '.cart-drawer__qty-input, .cart-drawer .qty' ) ) {
+			return;
+		}
+
+		const wrap = target.closest( '[data-cart-item-key]' );
+		const cartItemKey = wrap ? wrap.getAttribute( 'data-cart-item-key' ) : '';
+		const stepper = target.closest( '.cart-drawer__qty-stepper' );
+
+		syncCartQtyStepper( stepper );
+		scheduleCartItemQuantityUpdate( cartItemKey, target.value );
+	} );
+
+	document.addEventListener( 'click', function ( event ) {
+		const target = event.target;
+
+		if ( ! ( target instanceof Element ) ) {
+			return;
+		}
+
+		const button = target.closest( '[data-cart-qty-step]' );
+
+		if ( ! button || button.disabled ) {
+			return;
+		}
+
+		const stepper = button.closest( '.cart-drawer__qty-stepper' );
+		const wrap = button.closest( '[data-cart-item-key]' );
+		const input = stepper
+			? stepper.querySelector( '.cart-drawer__qty-input, .qty' )
+			: null;
+		const cartItemKey = wrap ? wrap.getAttribute( 'data-cart-item-key' ) : '';
+
+		if ( ! input || ! cartItemKey ) {
+			return;
+		}
+
+		event.preventDefault();
+
+		const step = parseInt( button.getAttribute( 'data-cart-qty-step' ) || '0', 10 );
+		const min = input.min !== '' && input.min !== null ? parseFloat( input.min ) : 1;
+		const maxRaw = input.max !== '' && input.max !== null ? parseFloat( input.max ) : NaN;
+		const hasMax = ! Number.isNaN( maxRaw ) && maxRaw > 0;
+		let next = ( parseFloat( input.value ) || 0 ) + step;
+
+		if ( next < min ) {
+			next = min;
+		}
+
+		if ( hasMax && next > maxRaw ) {
+			next = maxRaw;
+		}
+
+		if ( String( next ) === String( input.value ) ) {
+			syncCartQtyStepper( stepper );
+			return;
+		}
+
+		input.value = String( next );
+		syncCartQtyStepper( stepper );
+		scheduleCartItemQuantityUpdate( cartItemKey, String( next ) );
 	} );
 
 	function ajaxAddToCartFromForm( form, submitter ) {

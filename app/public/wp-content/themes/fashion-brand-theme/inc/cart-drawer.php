@@ -69,9 +69,14 @@ function fashion_brand_theme_render_cart_drawer_item( $cart_item_key, $cart_item
 		$min_quantity = 1;
 		$max_quantity = 1;
 	} else {
-		$min_quantity = 0;
+		// Drawer stepper floor is 1 (removal uses the remove control, not qty 0).
+		$min_quantity = 1;
 		$max_quantity = $_product->get_max_purchase_quantity();
 	}
+
+	$current_qty = (int) $cart_item['quantity'];
+	$at_min      = $current_qty <= (int) $min_quantity;
+	$at_max      = $max_quantity > 0 && $current_qty >= (int) $max_quantity;
 
 	$product_quantity = woocommerce_quantity_input(
 		array(
@@ -136,7 +141,27 @@ function fashion_brand_theme_render_cart_drawer_item( $cart_item_key, $cart_item
 
 			<div class="cart-drawer__meta-row">
 				<div class="cart-drawer__quantity product-quantity" data-cart-item-key="<?php echo esc_attr( $cart_item_key ); ?>">
-					<?php echo $product_quantity; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					<div class="cart-drawer__qty-stepper">
+						<button
+							type="button"
+							class="cart-drawer__qty-decrease"
+							data-cart-qty-step="-1"
+							aria-label="<?php esc_attr_e( 'Decrease quantity', 'fashion-brand-theme' ); ?>"
+							<?php disabled( $at_min ); ?>
+						>
+							<?php echo fashion_brand_theme_get_icon( 'minus', array( 'width' => 14, 'height' => 14 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</button>
+						<?php echo $product_quantity; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<button
+							type="button"
+							class="cart-drawer__qty-increase"
+							data-cart-qty-step="1"
+							aria-label="<?php esc_attr_e( 'Increase quantity', 'fashion-brand-theme' ); ?>"
+							<?php disabled( $at_max ); ?>
+						>
+							<?php echo fashion_brand_theme_get_icon( 'plus', array( 'width' => 14, 'height' => 14 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</button>
+					</div>
 				</div>
 				<div class="cart-drawer__line-total product-subtotal">
 					<?php echo $line_subtotal; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

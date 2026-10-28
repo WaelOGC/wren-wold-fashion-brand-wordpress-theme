@@ -226,19 +226,81 @@
 	flex-wrap: wrap;
 }
 
-.cart-drawer__quantity .quantity {
+.cart-drawer__qty-stepper {
+	display: inline-flex;
+	align-items: stretch;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-background);
+	overflow: hidden;
+}
+
+.cart-drawer__qty-stepper .quantity {
+	display: contents;
+}
+
+.cart-drawer__quantity .quantity .screen-reader-text {
+	/* Keep WC label for a11y; visually hide within the stepper. */
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.cart-drawer__qty-decrease,
+.cart-drawer__qty-increase {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
+	flex: 0 0 2.5rem;
+	min-width: 2.5rem;
+	min-height: 2.5rem;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-text);
+	cursor: pointer;
+	transition:
+		color var(--transition-base),
+		background-color var(--transition-base),
+		opacity var(--transition-base);
+}
+
+.cart-drawer__qty-decrease:hover:not(:disabled),
+.cart-drawer__qty-increase:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-ink) 6%, transparent);
+	color: var(--color-accent);
+}
+
+.cart-drawer__qty-decrease:focus-visible,
+.cart-drawer__qty-increase:focus-visible {
+	outline: var(--focus-outline-width) solid var(--color-focus);
+	outline-offset: -2px;
+	z-index: 1;
+}
+
+.cart-drawer__qty-decrease:disabled,
+.cart-drawer__qty-increase:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	color: var(--color-muted);
 }
 
 .cart-drawer__qty-input,
 .cart-drawer__quantity .qty {
-	width: 3.25rem;
-	min-height: 2.25rem;
-	padding: 0.4rem 0.5rem;
-	border: 1px solid var(--color-border);
-	border-radius: var(--radius-md);
-	background: var(--color-background);
+	width: 2.75rem;
+	min-height: 2.5rem;
+	padding: 0.35rem 0.25rem;
+	border: 0;
+	border-left: 1px solid var(--color-border);
+	border-right: 1px solid var(--color-border);
+	border-radius: 0;
+	background: transparent;
 	font-family: var(--font-family-base);
 	font-size: 0.875rem;
 	color: var(--color-text);
@@ -257,7 +319,8 @@
 .cart-drawer__qty-input:focus-visible,
 .cart-drawer__quantity .qty:focus-visible {
 	outline: var(--focus-outline-width) solid var(--color-focus);
-	outline-offset: var(--focus-outline-offset);
+	outline-offset: -2px;
+	z-index: 1;
 }
 
 .cart-drawer__line-total {
