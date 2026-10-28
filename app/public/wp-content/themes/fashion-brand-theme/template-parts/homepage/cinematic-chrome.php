@@ -53,6 +53,9 @@ $preview_contact      = fashion_brand_theme_homepage_image_uri( 'closing-cta/clo
 		class="cinematic-utility__link cinematic-cart"
 		href="<?php echo esc_url( $cart_url ); ?>"
 		aria-label="<?php esc_attr_e( 'Cart', 'fashion-brand-theme' ); ?>"
+		aria-expanded="false"
+		aria-controls="cart-drawer"
+		data-cart-toggle
 	>
 		<?php echo fashion_brand_theme_get_icon( 'shopping-bag', array( 'width' => 19, 'height' => 19, 'class' => 'cinematic-utility__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		<?php fashion_brand_theme_render_cinematic_cart_count( $cart_count ); ?>

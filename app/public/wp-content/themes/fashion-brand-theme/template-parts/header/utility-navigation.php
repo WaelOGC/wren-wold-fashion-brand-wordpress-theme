@@ -52,7 +52,14 @@ if ( ! $show_search && ! $show_account && ! $show_cart ) {
 
 		<?php if ( $show_cart ) : ?>
 			<li class="menu-item menu-item-cart">
-				<a class="utility-menu__cart" href="<?php echo esc_url( fashion_brand_theme_get_cart_url() ); ?>" aria-label="<?php esc_attr_e( 'Cart', 'fashion-brand-theme' ); ?>">
+				<a
+					class="utility-menu__cart"
+					href="<?php echo esc_url( fashion_brand_theme_get_cart_url() ); ?>"
+					aria-label="<?php esc_attr_e( 'Cart', 'fashion-brand-theme' ); ?>"
+					aria-expanded="false"
+					aria-controls="cart-drawer"
+					data-cart-toggle
+				>
 					<?php echo fashion_brand_theme_get_icon( 'shopping-bag', array( 'width' => 19, 'height' => 19, 'class' => 'utility-menu__icon' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					<?php fashion_brand_theme_render_header_cart_count(); ?>
 				</a>

@@ -31,6 +31,7 @@ function fashion_brand_theme_enqueue_assets() {
 		'components/shop',
 		'components/product',
 		'components/cart',
+		'components/cart-drawer',
 		'components/checkout',
 	);
 
@@ -56,10 +57,16 @@ function fashion_brand_theme_enqueue_assets() {
 		FASHION_BRAND_THEME_VERSION
 	);
 
+	$main_deps = array();
+
+	if ( class_exists( 'WooCommerce' ) ) {
+		$main_deps[] = 'jquery';
+	}
+
 	wp_enqueue_script(
 		'fashion-brand-theme-main',
 		FASHION_BRAND_THEME_URI . '/assets/js/main.js',
-		array(),
+		$main_deps,
 		FASHION_BRAND_THEME_VERSION,
 		true
 	);
@@ -69,6 +76,16 @@ function fashion_brand_theme_enqueue_assets() {
 		'fashionBrandThemeWishlist',
 		fashion_brand_theme_wishlist_script_data()
 	);
+
+	if ( class_exists( 'WooCommerce' ) && function_exists( 'fashion_brand_theme_should_render_cart_drawer' ) && fashion_brand_theme_should_render_cart_drawer() ) {
+		wp_localize_script(
+			'fashion-brand-theme-main',
+			'fashionBrandThemeCartDrawer',
+			array(
+				'wcAjaxUrl' => class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( '%%endpoint%%' ) : '',
+			)
+		);
+	}
 
 	wp_enqueue_script(
 		'fashion-brand-theme-live-search',
@@ -312,6 +329,26 @@ function fashion_brand_theme_dequeue_woocommerce_styles() {
 	wp_dequeue_style( 'woocommerce-smallscreen' );
 }
 add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_dequeue_woocommerce_styles', 20 );
+
+/**
+ * Ensure WooCommerce cart fragments + AJAX add-to-cart scripts load site-wide
+ * so the mini-cart drawer stays in sync without a page reload.
+ *
+ * @return void
+ */
+function fashion_brand_theme_enqueue_cart_drawer_scripts() {
+	if ( ! class_exists( 'WooCommerce' ) ) {
+		return;
+	}
+
+	if ( ! function_exists( 'fashion_brand_theme_should_render_cart_drawer' ) || ! fashion_brand_theme_should_render_cart_drawer() ) {
+		return;
+	}
+
+	wp_enqueue_script( 'wc-add-to-cart' );
+	wp_enqueue_script( 'wc-cart-fragments' );
+}
+add_action( 'wp_enqueue_scripts', 'fashion_brand_theme_enqueue_cart_drawer_scripts', 25 );
 
 /**
  * Output production favicon links when no Customizer site icon is set.
