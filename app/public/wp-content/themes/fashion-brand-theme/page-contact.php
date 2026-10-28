@@ -52,8 +52,8 @@ $form_heading = __( 'Send a message', 'fashion-brand-theme' );
 				<p class="contact-aside-column__response"><?php echo esc_html( $response_note ); ?></p>
 				<?php
 				if ( function_exists( 'fashion_brand_theme_has_company_public_details' ) && fashion_brand_theme_has_company_public_details() ) :
-					$company_name    = fashion_brand_theme_get_company_field( 'company_name' );
-					$company_phone   = fashion_brand_theme_get_company_field( 'company_phone' );
+					$company_name    = fashion_brand_theme_get_visible_company_field( 'company_name' );
+					$company_phone   = fashion_brand_theme_get_visible_company_field( 'company_phone' );
 					$company_address = fashion_brand_theme_get_company_address_lines();
 					$company_tel     = '' !== $company_phone ? fashion_brand_theme_get_company_tel_href( $company_phone ) : '';
 					?>

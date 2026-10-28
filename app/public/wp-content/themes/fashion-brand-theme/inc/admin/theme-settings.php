@@ -278,12 +278,20 @@ function fashion_brand_theme_get_settings_card_groups() {
 		),
 		'company'  => array(
 			array(
-				'id'          => 'company-details',
-				'title'       => __( 'Company details', 'fashion-brand-theme' ),
-				'description' => __( 'Show company & contact data on the Contact page, footer, and Schema.org. Edit the fields under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ),
+				'id'          => 'company-visibility',
+				'title'       => __( 'Field visibility', 'fashion-brand-theme' ),
+				'description' => __( 'Each toggle controls one field independently. Enter values under Appearance → Customize → Company & Contact; empty values never render.', 'fashion-brand-theme' ),
 				'icon'        => 'company',
-				'master'      => 'company_details_visible',
-				'fields'      => array( 'company_details_visible' ),
+				'fields'      => array(
+					'company_name_visible',
+					'phone_visible',
+					'email_visible',
+					'street_visible',
+					'postcode_visible',
+					'city_visible',
+					'kvk_visible',
+					'vat_visible',
+				),
 			),
 		),
 		'social'   => array(
@@ -322,7 +330,7 @@ function fashion_brand_theme_get_settings_tab_descriptions() {
 		'homepage' => __( 'Enable or disable homepage sections and edit limited hero/CTA copy.', 'fashion-brand-theme' ),
 		'shop'     => __( 'Presentation-only settings applied when WooCommerce is installed.', 'fashion-brand-theme' ),
 		'contact'  => __( 'Simple floating WhatsApp contact link. No AI — just a pre-filled chat to your number.', 'fashion-brand-theme' ),
-		'company'  => __( 'Show or hide company & contact details. Enter the data under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ),
+		'company'  => __( 'Per-field visibility for company & contact details. Enter the data under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ),
 		'social'   => __( 'External profile links for theme output. URLs are sanitized on save.', 'fashion-brand-theme' ),
 	);
 }

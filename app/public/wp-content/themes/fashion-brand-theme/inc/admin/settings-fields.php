@@ -63,7 +63,7 @@ function fashion_brand_theme_register_settings_sections() {
 		),
 		'fashion_brand_theme_company'  => array(
 			'title'       => __( 'Company', 'fashion-brand-theme' ),
-			'description' => __( 'Show or hide company & contact details on the Contact page, footer, and Schema.org output. Enter the data under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ),
+			'description' => __( 'Per-field visibility for company & contact details on the Contact page, footer, and Schema.org. Enter the data under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ),
 		),
 		'fashion_brand_theme_social'   => array(
 			'title'       => __( 'Social & Integrations', 'fashion-brand-theme' ),
@@ -153,8 +153,15 @@ function fashion_brand_theme_get_settings_fields_definition() {
 		array( 'whatsapp_number', __( 'WhatsApp Number', 'fashion-brand-theme' ), 'fashion_brand_theme_contact', 'text', __( 'Digits only, international format without a leading plus (e.g. 31649011582). Non-digits are stripped on save.', 'fashion-brand-theme' ) ),
 		array( 'whatsapp_message', __( 'Pre-filled Message', 'fashion-brand-theme' ), 'fashion_brand_theme_contact', 'textarea', __( 'Opens in the visitor’s WhatsApp chat as the starting message.', 'fashion-brand-theme' ) ),
 
-		// Company visibility (data lives in Customizer → Company & Contact).
-		array( 'company_details_visible', __( 'Show Company Details', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'When on, non-empty company fields appear on the Contact page, in the footer, and as Organization schema. Enter data under Appearance → Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		// Company per-field visibility (data lives in Customizer → Company & Contact).
+		array( 'company_name_visible', __( 'Show Company Name', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the company name when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'phone_visible', __( 'Show Phone', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the phone number when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'email_visible', __( 'Show Email', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Includes the company email in Schema.org when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'street_visible', __( 'Show Street + Number', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the street line when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'postcode_visible', __( 'Show Postcode', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the postcode when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'city_visible', __( 'Show City', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the city when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'kvk_visible', __( 'Show KVK Number', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the KVK number in the footer when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
+		array( 'vat_visible', __( 'Show VAT Number', 'fashion-brand-theme' ), 'fashion_brand_theme_company', 'checkbox', __( 'Shows the VAT number in the footer when it has a value in Customize → Company & Contact.', 'fashion-brand-theme' ) ),
 
 		// Social.
 		array( 'social_enabled', __( 'Enable Social Links', 'fashion-brand-theme' ), 'fashion_brand_theme_social', 'checkbox' ),

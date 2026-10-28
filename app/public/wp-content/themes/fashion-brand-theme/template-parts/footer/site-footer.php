@@ -51,8 +51,8 @@ $terms        = $terms_page ? get_permalink( $terms_page ) : '#';
 			<?php endif; ?>
 			<?php
 			if ( function_exists( 'fashion_brand_theme_has_company_public_details' ) && fashion_brand_theme_has_company_public_details() ) :
-				$footer_company_name    = fashion_brand_theme_get_company_field( 'company_name' );
-				$footer_company_phone   = fashion_brand_theme_get_company_field( 'company_phone' );
+				$footer_company_name    = fashion_brand_theme_get_visible_company_field( 'company_name' );
+				$footer_company_phone   = fashion_brand_theme_get_visible_company_field( 'company_phone' );
 				$footer_company_address = fashion_brand_theme_get_company_address_lines();
 				$footer_company_tel     = '' !== $footer_company_phone ? fashion_brand_theme_get_company_tel_href( $footer_company_phone ) : '';
 				?>
@@ -133,8 +133,8 @@ $terms        = $terms_page ? get_permalink( $terms_page ) : '#';
 		</p>
 		<?php
 		if ( function_exists( 'fashion_brand_theme_has_company_legal_ids' ) && fashion_brand_theme_has_company_legal_ids() ) :
-			$kvk = fashion_brand_theme_get_company_field( 'company_kvk' );
-			$vat = fashion_brand_theme_get_company_field( 'company_vat' );
+			$kvk = fashion_brand_theme_get_visible_company_field( 'company_kvk' );
+			$vat = fashion_brand_theme_get_visible_company_field( 'company_vat' );
 			$legal_bits = array();
 			if ( '' !== $kvk ) {
 				$legal_bits[] = sprintf(
