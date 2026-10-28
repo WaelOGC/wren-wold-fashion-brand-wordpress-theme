@@ -109,6 +109,24 @@ $terms        = $terms_page ? get_permalink( $terms_page ) : '#';
 		<p class="site-footer__legal">
 			<a href="<?php echo esc_url( $privacy ?: '#' ); ?>"><?php esc_html_e( 'Privacy Policy', 'fashion-brand-theme' ); ?></a>
 			<a href="<?php echo esc_url( $terms ); ?>"><?php esc_html_e( 'Terms', 'fashion-brand-theme' ); ?></a>
+			<span class="site-footer__credit">
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: %s: agency website URL */
+						__( 'Crafted by <a href="%s" target="_blank" rel="noopener">OGC NewFinity</a>', 'fashion-brand-theme' ),
+						esc_url( 'https://ogcnewfinity.com' )
+					),
+					array(
+						'a' => array(
+							'href'   => true,
+							'target' => true,
+							'rel'    => true,
+						),
+					)
+				);
+				?>
+			</span>
 		</p>
 	</div>
 </footer>

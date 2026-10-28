@@ -639,6 +639,38 @@ body.auto-fold .fbt-settings__savebar {
 	}
 }
 
+.fbt-settings__credit {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 16px;
+	margin-top: 28px;
+	padding: 14px 18px;
+	background: #fff;
+	border: 1px solid var(--fbt-line);
+	border-radius: var(--fbt-radius);
+	color: var(--fbt-muted);
+	font-size: 13px;
+}
+
+.fbt-settings__credit a {
+	color: var(--fbt-ink);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.fbt-settings__credit a:hover,
+.fbt-settings__credit a:focus-visible {
+	color: var(--fbt-accent);
+	text-decoration: underline;
+}
+
+.fbt-settings__credit-version {
+	margin-left: auto;
+	white-space: nowrap;
+	color: var(--fbt-muted);
+}
+
 /* Soften default WP notices on this page */
 .fbt-settings-wrap > .notice,
 .fbt-settings-wrap > .updated,

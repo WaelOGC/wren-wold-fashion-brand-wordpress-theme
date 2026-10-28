@@ -601,6 +601,36 @@ function fashion_brand_theme_render_settings_page() {
 				</div>
 			</div>
 
+			<footer class="fbt-settings__credit">
+				<span>
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: agency website URL */
+							__( 'Theme designed & developed by <a href="%s" target="_blank" rel="noopener">OGC NewFinity</a>', 'fashion-brand-theme' ),
+							esc_url( 'https://ogcnewfinity.com' )
+						),
+						array(
+							'a' => array(
+								'href'   => true,
+								'target' => true,
+								'rel'    => true,
+							),
+						)
+					);
+					?>
+				</span>
+				<span class="fbt-settings__credit-version">
+					<?php
+					printf(
+						/* translators: %s: theme version */
+						esc_html__( 'Version %s', 'fashion-brand-theme' ),
+						esc_html( FASHION_BRAND_THEME_VERSION )
+					);
+					?>
+				</span>
+			</footer>
+
 			<div class="fbt-settings__savebar" id="fbt-savebar" hidden>
 				<p><?php esc_html_e( 'You have unsaved changes', 'fashion-brand-theme' ); ?></p>
 				<button type="button" class="button" id="fbt-discard"><?php esc_html_e( 'Discard', 'fashion-brand-theme' ); ?></button>
